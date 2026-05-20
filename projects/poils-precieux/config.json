@@ -1,0 +1,102 @@
+{
+  "$schema": "../_template/config.schema.json",
+  "project": {
+    "id": "poils-precieux",
+    "name": "Poils Précieux",
+    "domain": "poilsprecieux.com",
+    "locale": "fr-FR",
+    "currency": "EUR",
+    "country": "FR"
+  },
+  "shopify": {
+    "store": "t90uug-9b.myshopify.com",
+    "envToken": "POILS_PRECIEUX_SHOPIFY_TOKEN",
+    "blogId": "gid://shopify/Blog/121879003473"
+  },
+  "openai": {
+    "envKey": "OPENAI_API_KEY",
+    "imageQuality": "high",
+    "imageModel": "gpt-image-1"
+  },
+  "anthropic": {
+    "envKey": "ANTHROPIC_API_KEY",
+    "model": "claude-opus-4-7"
+  },
+  "buffer": {
+    "envToken": "POILS_PRECIEUX_BUFFER_TOKEN",
+    "profiles": {
+      "instagram": null,
+      "tiktok": null
+    }
+  },
+  "sourcing": {
+    "rules": {
+      "minOrders": 500,
+      "minRating": 4.0,
+      "minPriceUSD": 3,
+      "maxPriceUSD": 30,
+      "targetMarginPct": 50,
+      "maxDeliveryDays": 30,
+      "categories": ["chien", "chat", "toilettage", "alimentation", "couchage", "balade", "jeu"],
+      "excludeCategories": ["vêtements humour", "oiseaux", "poissons", "reptiles", "croquettes", "médicaments"]
+    },
+    "weeklyTargets": {
+      "candidatesCount": 15,
+      "minOrdersBatch": 500,
+      "diversifyCategories": true
+    },
+    "rotation": [
+      { "week": 1, "focus": "toilettage" },
+      { "week": 2, "focus": "couchage" },
+      { "week": 3, "focus": "alimentation" },
+      { "week": 4, "focus": "balade" }
+    ]
+  },
+  "polish": {
+    "language": "fr",
+    "renameColors": true,
+    "removeShipsFrom": true,
+    "alignPricesPerColor": true,
+    "extractDimensionsToDescription": true,
+    "simplifySingleVariantOption": true,
+    "titlePattern": "[Nature] [Bénéfice] — [Mascotte]™",
+    "handlePattern": "[nature]-[mascotte]"
+  },
+  "images": {
+    "shotsPerColor": 1,
+    "background": "transparent",
+    "size": "1024x1024",
+    "removeOldImages": true,
+    "backupBeforeReplace": true
+  },
+  "blog": {
+    "cadence": "weekly",
+    "dayOfWeek": "wednesday",
+    "publishTime": "09:00",
+    "topicRotation": ["guide-pratique", "comparatif-produits", "saisonnier", "sante-conseil"],
+    "wordsTarget": 1200,
+    "wordsMin": 800,
+    "wordsMax": 1500,
+    "internalLinksPerArticle": 2
+  },
+  "social": {
+    "cadence": "daily",
+    "publishTime": "18:00",
+    "platforms": ["instagram", "tiktok"],
+    "weeklySchedule": {
+      "monday": { "theme": "guide", "format": "carousel" },
+      "tuesday": { "theme": "produit", "format": "single" },
+      "wednesday": { "theme": "astuce", "format": "reel" },
+      "thursday": { "theme": "temoignage", "format": "carousel" },
+      "friday": { "theme": "communaute", "format": "single" },
+      "saturday": { "theme": "behind-scenes", "format": "reel" },
+      "sunday": { "theme": "inspiration", "format": "single" }
+    },
+    "hashtagsCore": ["#poilsprecieux", "#poilsprecieuxfr"],
+    "hashtagsCategoryPool": {
+      "chien": ["#chienpremium", "#chienenfrance", "#brossagechien", "#santechien", "#chiendebonheur"],
+      "chat": ["#chataccessoire", "#chatenfrance", "#brossagechat", "#santechat", "#chatpoilus"]
+    },
+    "hashtagsCommunity": ["#petlife", "#petlovers", "#dogsofinstagram", "#catsofinstagram"]
+  }
+}

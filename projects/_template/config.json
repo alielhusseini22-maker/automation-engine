@@ -1,0 +1,56 @@
+{
+  "project": {
+    "id": "PROJECT_ID",
+    "name": "Project Name",
+    "domain": "example.com",
+    "locale": "fr-FR",
+    "currency": "EUR",
+    "country": "FR"
+  },
+  "shopify": {
+    "store": "xxx.myshopify.com",
+    "envToken": "PROJECT_ID_SHOPIFY_TOKEN",
+    "blogId": "gid://shopify/Blog/XXX"
+  },
+  "openai": {
+    "envKey": "OPENAI_API_KEY",
+    "imageQuality": "high",
+    "imageModel": "gpt-image-1"
+  },
+  "anthropic": {
+    "envKey": "ANTHROPIC_API_KEY",
+    "model": "claude-opus-4-7"
+  },
+  "buffer": {
+    "envToken": "PROJECT_ID_BUFFER_TOKEN",
+    "profiles": {
+      "instagram": null,
+      "tiktok": null
+    }
+  },
+  "sourcing": {
+    "rules": {
+      "minOrders": 500,
+      "minRating": 4.0,
+      "minPriceUSD": 3,
+      "maxPriceUSD": 30,
+      "targetMarginPct": 50,
+      "categories": [],
+      "excludeCategories": []
+    },
+    "weeklyTargets": { "candidatesCount": 15 }
+  },
+  "polish": {
+    "language": "fr",
+    "renameColors": true,
+    "removeShipsFrom": true
+  },
+  "blog": {
+    "cadence": "weekly",
+    "dayOfWeek": "wednesday"
+  },
+  "social": {
+    "cadence": "daily",
+    "platforms": ["instagram", "tiktok"]
+  }
+}

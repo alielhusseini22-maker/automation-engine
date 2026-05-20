@@ -1,0 +1,44 @@
+name: Social — Daily 18h
+
+on:
+  schedule:
+    # Every day at 18:00 Paris time
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+      theme:
+        description: "Override theme (skip day rotation)"
+        required: false
+      format:
+        description: "Override format (single|carousel|reel)"
+        required: false
+
+jobs:
+  social:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Run social post generation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
+          POILS_PRECIEUX_BUFFER_TOKEN: ${{ secrets.POILS_PRECIEUX_BUFFER_TOKEN }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: |
+          node commands/social.js \
+            --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
+            ${{ github.event.inputs.theme && format('--theme {0}', github.event.inputs.theme) || '' }} \
+            ${{ github.event.inputs.format && format('--format {0}', github.event.inputs.format) || '' }}

@@ -1,0 +1,23 @@
+{
+  "name": "automation-engine",
+  "version": "0.1.0",
+  "description": "Multi-project automation engine: product sourcing, polish, AI content, social posts",
+  "type": "module",
+  "scripts": {
+    "source": "node commands/source.js",
+    "polish": "node commands/polish.js",
+    "blog": "node commands/blog.js",
+    "social": "node commands/social.js",
+    "test:smoke": "node commands/smoke.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "csv-stringify": "^6.6.0",
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.0",
+    "playwright": "^1.51.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

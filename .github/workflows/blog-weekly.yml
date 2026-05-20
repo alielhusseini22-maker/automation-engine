@@ -1,0 +1,39 @@
+name: Blog — Weekly Wednesday 9h
+
+on:
+  schedule:
+    # Every Wednesday at 09:00 Paris time
+    - cron: "0 7 * * 3"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+      topic:
+        description: "Override topic title (skip auto-pick)"
+        required: false
+
+jobs:
+  blog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Run blog generation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: |
+          node commands/blog.js \
+            --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
+            ${{ github.event.inputs.topic && format('--topic "{0}"', github.event.inputs.topic) || '' }}

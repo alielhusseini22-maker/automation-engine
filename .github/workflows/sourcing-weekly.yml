@@ -1,0 +1,53 @@
+name: Sourcing — Weekly Monday 9h
+
+on:
+  schedule:
+    # Every Monday at 09:00 Paris time (07:00 UTC summer / 08:00 UTC winter — use 07:00 to favor summer)
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+      focus:
+        description: "Sourcing focus (toilettage|couchage|alimentation|balade|jeu)"
+        required: false
+      count:
+        description: "Number of candidates"
+        required: false
+        default: "15"
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run sourcing
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: |
+          node commands/source.js \
+            --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
+            ${{ github.event.inputs.focus && format('--focus {0}', github.event.inputs.focus) || '' }} \
+            ${{ github.event.inputs.count && format('--count {0}', github.event.inputs.count) || '' }}
+
+      - name: Commit run artifacts
+        run: |
+          git config user.name "automation-bot"
+          git config user.email "bot@automation-engine.local"
+          git add runs/
+          git commit -m "sourcing: weekly run $(date +%Y-%m-%d)" || echo "Nothing to commit"
+          git push || echo "Nothing to push"
