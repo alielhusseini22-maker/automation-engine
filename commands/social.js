@@ -23,7 +23,6 @@ import { generateDesignedPost } from "../core/social/designed-post.js";
 import { closeBrowser } from "../core/design/render.js";
 import { animateCarousel, ffmpegAvailable } from "../core/design/animate.js";
 import { pickMusicTrack, moodForContext } from "../core/design/music.js";
-import path from "node:path";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
