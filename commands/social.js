@@ -105,6 +105,9 @@ async function main() {
   const desiredPlatforms = config.social?.platforms || [];
   const targets = profiles.filter((p) => desiredPlatforms.includes(p.service));
   const tiktokTarget = targets.find((p) => p.service === "tiktok");
+  console.log(`[social] Buffer profiles fetched : ${profiles.map(p => `${p.service}:${p.name || "?"}`).join(", ") || "(none)"}`);
+  console.log(`[social] Desired platforms (config) : ${desiredPlatforms.join(", ")}`);
+  console.log(`[social] Final targets after filter : ${targets.map(p => p.service).join(", ") || "(none)"}`);
 
   if (tiktokTarget && (await ffmpegAvailable())) {
     console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
