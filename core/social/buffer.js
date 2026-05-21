@@ -107,22 +107,26 @@ function buildMetadata(service, format = "single", title) {
  * @param {string} args.service - "instagram"|"facebook"|"tiktok"
  * @param {string} args.format - "single"|"carousel"|"reel" (drives postType)
  * @param {string} args.text - caption complet
- * @param {string} args.imageUrl - URL publique de l'image
+ * @param {string} args.imageUrl - URL publique de l'image OU vidéo (cf mediaType)
+ * @param {"image"|"video"} [args.mediaType="image"]
  * @param {Date} args.scheduledAt - date de publication
  */
-export async function schedulePost(config, { profileId, service, format, text, imageUrl, scheduledAt }) {
+export async function schedulePost(config, { profileId, service, format, text, imageUrl, mediaType = "image", scheduledAt }) {
   if (!imageUrl) {
-    throw new Error("Buffer schedulePost requires imageUrl (assets is mandatory)");
+    throw new Error("Buffer schedulePost requires imageUrl/video URL (assets is mandatory)");
   }
   const isoDate = scheduledAt.toISOString();
   const metadata = buildMetadata(service, format, text?.slice(0, 80));
+  const assetEntry = mediaType === "video"
+    ? { video: { url: imageUrl } }
+    : { image: { url: imageUrl } };
   const input = {
     text,
     channelId: profileId,
     dueAt: isoDate,
     schedulingType: "automatic",
     mode: "customScheduled",
-    assets: [{ image: { url: imageUrl } }],
+    assets: [assetEntry],
   };
   if (metadata) input.metadata = metadata;
 

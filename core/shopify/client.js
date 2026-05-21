@@ -34,7 +34,13 @@ export async function shopifyQuery(config, query, variables = {}) {
   return json.data;
 }
 
-export async function stagedUploadsCreate(config, { filename, mimeType, fileSize }) {
+function inferResource(mimeType) {
+  if (mimeType?.startsWith("video/")) return "VIDEO";
+  return "IMAGE";
+}
+
+export async function stagedUploadsCreate(config, { filename, mimeType, fileSize, resource }) {
+  const res = resource || inferResource(mimeType);
   const data = await shopifyQuery(
     config,
     `mutation($input: [StagedUploadInput!]!) {
@@ -46,7 +52,7 @@ export async function stagedUploadsCreate(config, { filename, mimeType, fileSize
     {
       input: [
         {
-          resource: "IMAGE",
+          resource: res,
           filename,
           mimeType,
           httpMethod: "POST",
@@ -75,6 +81,13 @@ async function postBinaryToTarget({ target, buffer, mimeType, filename }) {
 export async function uploadImageBuffer(config, { buffer, filename, mimeType = "image/png" }) {
   const target = await stagedUploadsCreate(config, { filename, mimeType, fileSize: buffer.length });
   return await postBinaryToTarget({ target, buffer, mimeType, filename });
+}
+
+/**
+ * Alias plus parlant pour upload générique (image ou vidéo).
+ */
+export async function uploadMediaBuffer(config, { buffer, filename, mimeType }) {
+  return await uploadImageBuffer(config, { buffer, filename, mimeType });
 }
 
 export async function createArticle(config, { blogId, title, body, summary, imageUrl, imageAlt, tags = [], handle, isPublished = true, authorName }) {

@@ -247,6 +247,7 @@ async function main() {
           format: dayTheme.format,
           text: captionFull,
           imageUrl: mediaUrl,
+          mediaType: source.mediaType || "image",
           scheduledAt,
         });
         posts.push({ profile: p.service, id: post?.id || null });
