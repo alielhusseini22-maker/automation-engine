@@ -157,6 +157,7 @@ export async function uploadVideoToShopifyFiles(config, { buffer, filename, mime
           ... on Video {
             id
             fileStatus
+            fileErrors { code details message }
             sources { url mimeType format }
             originalSource { url }
           }
@@ -168,14 +169,17 @@ export async function uploadVideoToShopifyFiles(config, { buffer, filename, mime
     if (!node) throw new Error(`Video file ${fileId} not found`);
     if (node.fileStatus === "READY") {
       const sources = node.sources || [];
-      // Préfère MP4 H.264 si dispo, sinon premier source, sinon originalSource
       const mp4 = sources.find((s) => (s.mimeType || "").includes("mp4")) || sources[0];
       const url = mp4?.url || node.originalSource?.url;
       if (!url) throw new Error("Video READY but no source URL returned");
       return url;
     }
     if (node.fileStatus === "FAILED") {
-      throw new Error(`Shopify video processing FAILED for ${fileId}`);
+      const errs = node.fileErrors || [];
+      const errStr = errs.length
+        ? errs.map((e) => `${e.code}: ${e.message}${e.details ? ` (${e.details})` : ""}`).join(" | ")
+        : "(no fileErrors details)";
+      throw new Error(`Shopify video processing FAILED for ${fileId} — ${errStr}`);
     }
     // PROCESSING / UPLOADED → on continue à poller
   }
