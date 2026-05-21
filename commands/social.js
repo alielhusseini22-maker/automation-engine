@@ -16,7 +16,7 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { loadProject, loadBrandCharter, parseArgs, runDir } from "../core/config.js";
-import { uploadImageBuffer } from "../core/shopify/client.js";
+import { uploadImageBuffer, uploadVideoToShopifyFiles } from "../core/shopify/client.js";
 import { selectHashtags } from "../core/social/themes.js";
 import { hasBufferToken, listProfiles, schedulePost } from "../core/social/buffer.js";
 import { generateDesignedPost } from "../core/social/designed-post.js";
@@ -146,10 +146,12 @@ async function main() {
       });
       console.log(`  ✓ animated MP4 generated`);
       const buf = (await import("node:fs")).readFileSync(animatedPath);
-      videoUrl = await uploadImageBuffer(config, {
+      console.log(`  uploading + processing video to Shopify Files (this takes 30-60s)...`);
+      videoUrl = await uploadVideoToShopifyFiles(config, {
         buffer: buf,
         filename: `social-tiktok-${path.basename(animatedPath)}`,
         mimeType: "video/mp4",
+        altText: post.content?.altText || "Poils Précieux video",
       });
       console.log(`  → ${videoUrl}`);
     } catch (err) {

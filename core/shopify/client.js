@@ -90,6 +90,96 @@ export async function uploadMediaBuffer(config, { buffer, filename, mimeType }) 
   return await uploadImageBuffer(config, { buffer, filename, mimeType });
 }
 
+/**
+ * Upload vidéo complet : stagedUpload → fileCreate → poll READY → URL CDN publique.
+ * Les staged URLs vidéo Shopify sont privées (GCS), faut passer par fileCreate pour avoir
+ * une URL publique consommable par des services tiers (Buffer, etc).
+ */
+export async function uploadVideoToShopifyFiles(config, { buffer, filename, mimeType = "video/mp4", altText = "" }) {
+  // 1. Stage upload
+  const target = await stagedUploadsCreate(config, {
+    filename,
+    mimeType,
+    fileSize: buffer.length,
+    resource: "VIDEO",
+  });
+
+  // 2. POST binary
+  const stagedUrl = await postBinaryToTarget({ target, buffer, mimeType, filename });
+
+  // 3. fileCreate (Shopify ingère + transcode → URL CDN publique)
+  const createData = await shopifyQuery(
+    config,
+    `mutation($files: [FileCreateInput!]!) {
+      fileCreate(files: $files) {
+        files {
+          id
+          fileStatus
+          ... on Video {
+            id
+            sources { url mimeType format height width }
+            originalSource { url }
+          }
+        }
+        userErrors { field message code }
+      }
+    }`,
+    {
+      files: [{
+        originalSource: stagedUrl,
+        contentType: "VIDEO",
+        filename,
+        alt: altText,
+      }],
+    }
+  );
+  const errors = createData.fileCreate.userErrors;
+  if (errors?.length) {
+    throw new Error(`fileCreate: ${JSON.stringify(errors)}`);
+  }
+  const file = createData.fileCreate.files?.[0];
+  if (!file?.id) throw new Error("fileCreate returned no file");
+
+  // 4. Poll fileStatus = READY (videos take ~20-60s to transcode)
+  const fileId = file.id;
+  const startTime = Date.now();
+  const maxWaitMs = 180000; // 3 min
+  let attempts = 0;
+  while (Date.now() - startTime < maxWaitMs) {
+    attempts++;
+    await new Promise((r) => setTimeout(r, attempts < 5 ? 3000 : 5000));
+    const statusData = await shopifyQuery(
+      config,
+      `query($id: ID!) {
+        node(id: $id) {
+          ... on Video {
+            id
+            fileStatus
+            sources { url mimeType format }
+            originalSource { url }
+          }
+        }
+      }`,
+      { id: fileId }
+    );
+    const node = statusData.node;
+    if (!node) throw new Error(`Video file ${fileId} not found`);
+    if (node.fileStatus === "READY") {
+      const sources = node.sources || [];
+      // Préfère MP4 H.264 si dispo, sinon premier source, sinon originalSource
+      const mp4 = sources.find((s) => (s.mimeType || "").includes("mp4")) || sources[0];
+      const url = mp4?.url || node.originalSource?.url;
+      if (!url) throw new Error("Video READY but no source URL returned");
+      return url;
+    }
+    if (node.fileStatus === "FAILED") {
+      throw new Error(`Shopify video processing FAILED for ${fileId}`);
+    }
+    // PROCESSING / UPLOADED → on continue à poller
+  }
+  throw new Error(`Shopify video processing timeout (>${maxWaitMs / 1000}s)`);
+}
+
 export async function createArticle(config, { blogId, title, body, summary, imageUrl, imageAlt, tags = [], handle, isPublished = true, authorName }) {
   const name = authorName || config.blog?.author || "Équipe Poils Précieux";
   const data = await shopifyQuery(
