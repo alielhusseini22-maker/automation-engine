@@ -32,7 +32,7 @@ export async function renderHtmlToPng({ html, width, height, outputPath, waitMs 
   const browser = await getBrowser();
   const context = await browser.newContext({
     viewport: { width, height },
-    deviceScaleFactor: 2, // Retina pour rendu net
+    deviceScaleFactor: 1, // 1080x1080 actual pixels (TikTok limite à 2M pixels, retina x2 dépasse)
   });
   const page = await context.newPage();
   await page.setContent(html, { waitUntil: "networkidle" });

@@ -109,7 +109,9 @@ async function main() {
   console.log(`[social] Desired platforms (config) : ${desiredPlatforms.join(", ")}`);
   console.log(`[social] Final targets after filter : ${targets.map(p => p.service).join(", ") || "(none)"}`);
 
-  if (tiktokTarget && (await ffmpegAvailable())) {
+  const ffmpegOk = await ffmpegAvailable();
+  console.log(`[social] ffmpeg available: ${ffmpegOk}, tiktok target: ${!!tiktokTarget}`);
+  if (tiktokTarget && ffmpegOk) {
     console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
     try {
       const mood = moodForContext({ slot, templateType: post.brief.templateType });
