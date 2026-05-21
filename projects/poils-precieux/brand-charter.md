@@ -141,6 +141,67 @@ Longueur cible : 60-150 mots max.
 
 ---
 
+### 6.bis Patterns viraux qui marchent en FR (mai 2026)
+
+**Hooks Reel/TikTok (3 premières secondes — décisives)** :
+- `POV : ton chien voit la pluie pour la 1ère fois` (POV format dominant 2024-2026)
+- `Tu fais ça à ton chat sans le savoir` (warning + suspense)
+- `Avant de brosser ton chien à poils longs, lis ça` (pre-action warning)
+- `Personne ne te dit ça à l'animalerie` (insider angle)
+- `L'erreur que 90 % des proprios font le matin` (mistake-pattern)
+- `Ça change tout pour un cocker en mue` (transformation tease)
+
+**Hooks photo statique (scroll-stop)** :
+- `Le rituel du soir.` (statement court, pose une scène)
+- `Ce moment qu'on connaît tous.` (collectif, identification)
+- `Quand ton chien a enfin sa place.` (résolution narrative)
+- Question directe : `Est-ce que ton chat aussi dort comme ça ?`
+- Mini-stat : `80 % des chiens à poils longs font des nœuds. Voici pourquoi.`
+
+**Engagement bait fin de caption** (l'algorithme récompense commentaires + sauvegardes) :
+- Question ouverte : `Ton chat dort où, toi ?`
+- Invitation save : `Garde ce post pour ton prochain brossage.`
+- Tag d'ami : `Tague le proprio d'un cocker qui galère avec les nœuds.`
+- Mini sondage : `Brosse en bois ou métal pour vous ?`
+- Aveu collectif : `Avoue, ton chat fait ça aussi 👇`
+
+**Une seule de ces lignes en fin** — pas toutes en même temps.
+
+### 6.ter Exemples calibrés (caption qui doit ressembler à ça)
+
+✅ **EXEMPLE BON — Reel tendresse, vraie vidéo brand** :
+> POV : ton cocker a enfin compris ce que c'est qu'un brossage tranquille.
+>
+> Trois semaines de patience, une brosse adaptée au poil long, cinq minutes par soir. Ce qui change vraiment, c'est l'outil : picots arrondis, manche en bois, jamais de tension sur la peau.
+>
+> Tag le proprio d'un cocker qui galère avec les nœuds.
+
+✅ **EXEMPLE BON — Photo produit Marley** :
+> Pour les chiens à poils longs, le bon outil change tout.
+>
+> Une brosse à picots arrondis ne tire pas, ne casse pas le poil. Le pelage suit, la peau respire, le moment devient calme. Cinq minutes par soir suffisent.
+>
+> Brosse Marley disponible sur poilsprecieux.com — lien en bio.
+
+✅ **EXEMPLE BON — Pexels stock, jour inspiration** :
+> Ce moment de calme qu'on cherche tous pour son chat.
+>
+> Une fenêtre, un coussin doux, et plus rien à demander de mieux. Les chats ont ce talent.
+>
+> Toi, ton chat, c'est quel coin préféré ?
+
+❌ **EXEMPLE MAUVAIS — à NE JAMAIS générer** :
+> Claire nous a écrit au sujet de Nougat, son cocker de 4 ans. Avant : brossage redouté…
+>
+> (Pourquoi : Claire et Nougat sont fictifs. Mention "slide 3" sur un single. Faux témoignage = perte de crédibilité.)
+
+❌ **EXEMPLE MAUVAIS — à NE JAMAIS générer** :
+> 🔥🔥 PROMO BRUH 🔥🔥 -50% MAINTENANT !! Plus que 3 en stock !!!
+>
+> (Pourquoi : émoji stream + urgence factice + caps lock + ton agressif = anti-charte.)
+
+---
+
 ## 7. Stratégie blog — calendrier éditorial
 
 **Cadence** : 1 article / semaine (publié mercredi matin).

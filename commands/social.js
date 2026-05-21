@@ -24,7 +24,7 @@ import { getDayTheme, selectHashtags } from "../core/social/themes.js";
 import { captionFromBrief } from "../core/social/content.js";
 import { hasBufferToken, listProfiles, schedulePost } from "../core/social/buffer.js";
 import { listQueueItems, pickItemForDay, markConsumed } from "../core/social/queue.js";
-import { hasPexelsKey, searchVideos, searchPhotos, pickRandom, pickBestVideoFile, downloadFile, queryForTheme } from "../core/social/pexels.js";
+import { hasPexelsKey, searchVideos, searchPhotos, pickFreshVideo, pickFreshPhoto, markUsed, pickBestVideoFile, downloadFile, queryForTheme } from "../core/social/pexels.js";
 import { findNewProductToPromote, productPromoBrief } from "../core/social/promo.js";
 import { generateImage } from "../core/images/openai.js";
 
@@ -88,13 +88,14 @@ async function fetchFromPexels(config, dayTheme, dir) {
   console.log(`[social]   ▶ source: pexels (${isVideo ? "video" : "photo"}) query="${query}"`);
 
   if (isVideo) {
-    const videos = await searchVideos(query, { perPage: 15, orientation: "portrait" });
-    const video = pickRandom(videos);
+    const videos = await searchVideos(query, { perPage: 20, orientation: "portrait" });
+    const video = pickFreshVideo(config, videos);
     if (!video) return null;
     const file = pickBestVideoFile(video);
     if (!file) return null;
     const destPath = path.join(dir, `pexels-${video.id}.mp4`);
     await downloadFile(file.link, destPath);
+    markUsed(config, "video", video.id);
     return {
       sourceType: "pexels",
       mediaPath: destPath,
@@ -108,12 +109,13 @@ async function fetchFromPexels(config, dayTheme, dir) {
       },
     };
   } else {
-    const photos = await searchPhotos(query, { perPage: 15 });
-    const photo = pickRandom(photos);
+    const photos = await searchPhotos(query, { perPage: 20 });
+    const photo = pickFreshPhoto(config, photos);
     if (!photo) return null;
     const url = photo.src?.large || photo.src?.medium;
     const destPath = path.join(dir, `pexels-${photo.id}.jpg`);
     await downloadFile(url, destPath);
+    markUsed(config, "photo", photo.id);
     return {
       sourceType: "pexels",
       mediaPath: destPath,

@@ -1,0 +1,42 @@
+name: Content Ideas — Weekly Sunday 9h
+
+on:
+  schedule:
+    # Every Sunday at 09:00 Paris time
+    - cron: "0 7 * * 0"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+
+jobs:
+  ideas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Generate content ideas
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: node commands/content-ideas.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
+
+      - name: Commit brief
+        run: |
+          git config user.name "automation-bot"
+          git config user.email "bot@automation-engine.local"
+          git add runs/
+          git commit -m "content-ideas: weekly brief $(date +%Y-%m-%d)" || echo "Nothing to commit"
+          git push || echo "Nothing to push"

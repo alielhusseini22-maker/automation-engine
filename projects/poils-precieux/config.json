@@ -95,10 +95,34 @@
       "sunday":    { "theme": "inspiration",       "format": "reel",   "source": "queue",           "fallback": "pexels" }
     },
     "hashtagsCore": ["#poilsprecieux", "#poilsprecieuxfr"],
+    "hashtagsHighVolumeFR": [
+      "#chien", "#chat", "#chienenfrance", "#chatenfrance", "#petlovers", "#petlife", "#animauxfr"
+    ],
     "hashtagsCategoryPool": {
-      "chien": ["#chienpremium", "#chienenfrance", "#brossagechien", "#santechien", "#chiendebonheur"],
-      "chat": ["#chataccessoire", "#chatenfrance", "#brossagechat", "#santechat", "#chatpoilus"]
+      "chien": [
+        "#chienpremium", "#brossagechien", "#santechien", "#chiendebonheur",
+        "#toilettagechien", "#educationcanine", "#chiothiver", "#chiensenior",
+        "#poilslongs", "#poilscourts", "#shibainu", "#cockerspaniel", "#goldenretriever",
+        "#bergerallemand", "#labrador", "#frenchie", "#bichonfrise", "#cavalierkingcharles"
+      ],
+      "chat": [
+        "#chataccessoire", "#brossagechat", "#santechat", "#chatpoilus",
+        "#toilettagechat", "#chathaut", "#maincoon", "#chatpersan", "#chatbritish",
+        "#chatonmignons", "#chatsiamois", "#chatcalico", "#chatsdomestiques"
+      ],
+      "toilettage": [
+        "#toilettage", "#toilettagechien", "#toilettagechat", "#brossage", "#pelagetip"
+      ],
+      "couchage": [
+        "#litpourchien", "#litpourchat", "#couchageanimal", "#cocooning"
+      ],
+      "balade": [
+        "#promenadechien", "#harnaischien", "#laissechien", "#chienenballade"
+      ]
     },
-    "hashtagsCommunity": ["#petlife", "#petlovers", "#dogsofinstagram", "#catsofinstagram"]
+    "hashtagsCommunity": [
+      "#dogsofinstagram", "#catsofinstagram", "#dogsofparis", "#catsofparis",
+      "#instadog", "#instacat", "#pawsome"
+    ]
   }
 }

@@ -10,26 +10,36 @@ export function getDayTheme(config, date = new Date()) {
 }
 
 /**
- * Renvoie un pool d'hashtags adapté au projet + au thème du jour.
+ * Renvoie un pool d'hashtags pyramidal : core brand + high-volume FR + niche catégorie + community.
+ * La pyramide booste à la fois la portée (high-volume) et le ciblage (niche).
  */
 export function selectHashtags(config, { category = null, count = 7 } = {}) {
   const core = config.social?.hashtagsCore || [];
+  const highVolume = config.social?.hashtagsHighVolumeFR || [];
   const categoryPool = category && config.social?.hashtagsCategoryPool?.[category]
     ? config.social.hashtagsCategoryPool[category]
     : [];
   const community = config.social?.hashtagsCommunity || [];
 
-  // Always include all core, then sample from category + community
-  const picks = [...core];
-  const sampleCount = Math.max(0, count - picks.length);
-  const remainder = [...categoryPool, ...community];
-  // Simple shuffle by Date+index for deterministic variation per day
+  // Pyramide pour 7 hashtags (par défaut) :
+  //   2 core brand
+  //   2 high-volume FR
+  //   2 niche/catégorie (ciblage qualifié)
+  //   1 community
+  const picks = [...core.slice(0, 2)];
   const today = new Date().getDate();
-  const sampled = remainder
-    .map((tag, i) => ({ tag, sort: (i * 7 + today) % remainder.length }))
-    .sort((a, b) => a.sort - b.sort)
-    .slice(0, sampleCount)
-    .map((x) => x.tag);
 
-  return [...picks, ...sampled].slice(0, count);
+  // Shuffle déterministe par date pour varier les hashtags entre les jours
+  function pickN(arr, n) {
+    const sorted = arr
+      .map((tag, i) => ({ tag, sort: (i * 7 + today * 11) % Math.max(arr.length, 1) }))
+      .sort((a, b) => a.sort - b.sort);
+    return sorted.slice(0, n).map((x) => x.tag);
+  }
+
+  picks.push(...pickN(highVolume, 2));
+  picks.push(...pickN(categoryPool, 2));
+  picks.push(...pickN(community, Math.max(0, count - picks.length)));
+
+  return [...new Set(picks)].slice(0, count);
 }
