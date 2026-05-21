@@ -43,7 +43,9 @@ export async function animateCarousel({
     args.push("-loop", "1", "-t", String(slideDurationSec), "-i", p);
   }
   if (audioPath) {
-    args.push("-i", audioPath);
+    // -stream_loop -1 fait reboucler l'audio à l'infini avant le mix.
+    // Plus fiable que aloop dans filter_complex.
+    args.push("-stream_loop", "-1", "-i", audioPath);
   }
 
   // Filter complex : pour chaque slide, scale+pad au format vertical 9:16 puis zoompan (Ken Burns).
@@ -71,14 +73,17 @@ export async function animateCarousel({
   args.push("-map", "[outv]");
 
   if (audioPath) {
-    // Map audio : index = slideCount (inputs vidéo viennent avant audio)
-    // Loop + trim à la durée vidéo + fade in/out
+    // Audio : map depuis input index slideCount (vient après les inputs vidéo).
+    // Fade in/out simple. -shortest coupe la sortie à la durée vidéo.
+    const fadeOutStart = Math.max(0, totalDurationSec - 0.5).toFixed(2);
     args.push(
       "-map", `${slideCount}:a`,
       "-c:a", "aac",
-      "-b:a", "128k",
-      "-shortest",
-      "-af", `aloop=loop=-1:size=2e+09,atrim=duration=${totalDurationSec},afade=t=in:st=0:d=0.5,afade=t=out:st=${(totalDurationSec - 0.5).toFixed(2)}:d=0.5`
+      "-b:a", "192k",
+      "-ac", "2",
+      "-ar", "44100",
+      "-af", `afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=0.5`,
+      "-shortest"
     );
   }
 
