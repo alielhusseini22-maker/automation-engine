@@ -21,6 +21,9 @@ import { selectHashtags } from "../core/social/themes.js";
 import { hasBufferToken, listProfiles, schedulePost } from "../core/social/buffer.js";
 import { generateDesignedPost } from "../core/social/designed-post.js";
 import { closeBrowser } from "../core/design/render.js";
+import { animateCarousel, ffmpegAvailable } from "../core/design/animate.js";
+import { pickMusicTrack, moodForContext } from "../core/design/music.js";
+import path from "node:path";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -91,12 +94,49 @@ async function main() {
     return;
   }
 
-  // Step 2 — upload toutes les slides vers Shopify CDN
-  console.log(`[social] Step 2/3 — uploading ${post.mediaPaths.length} slide(s) to Shopify CDN`);
-  const mediaUrls = await uploadAllSlides(config, post.mediaPaths);
-  for (const u of mediaUrls) console.log(`  → ${u}`);
+  // Step 2 — upload toutes les slides PNG vers Shopify CDN (pour Insta/FB carousel)
+  console.log(`[social] Step 2/4 — uploading ${post.mediaPaths.length} slide(s) to Shopify CDN`);
+  const imageUrls = await uploadAllSlides(config, post.mediaPaths);
+  for (const u of imageUrls) console.log(`  → ${u}`);
 
-  // Step 3 — schedule via Buffer
+  // Step 3 — animer en vidéo MP4 pour TikTok (Ken Burns + musique)
+  // Seulement si TikTok est dans les targets ET ffmpeg disponible
+  let videoUrl = null;
+  const profiles = hasBufferToken(config) ? await listProfiles(config) : [];
+  const desiredPlatforms = config.social?.platforms || [];
+  const targets = profiles.filter((p) => desiredPlatforms.includes(p.service));
+  const tiktokTarget = targets.find((p) => p.service === "tiktok");
+
+  if (tiktokTarget && (await ffmpegAvailable())) {
+    console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
+    try {
+      const mood = moodForContext({ slot, templateType: post.brief.templateType });
+      const audioPath = pickMusicTrack({ mood });
+      console.log(`  music: ${audioPath ? path.basename(audioPath) : "(no track found, silent video)"}`);
+      const animatedPath = path.join(dir, `animated-${Date.now()}.mp4`);
+      await animateCarousel({
+        slidePaths: post.mediaPaths,
+        audioPath,
+        outputPath: animatedPath,
+        slideDurationSec: post.mediaPaths.length >= 5 ? 3 : 4, // carousel 5 slides → 15s, single → 4s
+      });
+      console.log(`  ✓ animated MP4 generated`);
+      const buf = (await import("node:fs")).readFileSync(animatedPath);
+      videoUrl = await uploadImageBuffer(config, {
+        buffer: buf,
+        filename: `social-tiktok-${path.basename(animatedPath)}`,
+        mimeType: "video/mp4",
+      });
+      console.log(`  → ${videoUrl}`);
+    } catch (err) {
+      console.log(`  ⚠ Animation failed: ${err.message}`);
+      console.log(`  TikTok will receive the image carousel (sub-optimal but works)`);
+    }
+  } else if (tiktokTarget) {
+    console.log(`[social] Step 3/4 — ffmpeg unavailable, TikTok gets image carousel (sub-optimal)`);
+  }
+
+  // Step 4 — schedule via Buffer (asset différencié par plateforme)
   const scheduledAt = scheduleTimeForSlot(slot);
   const manifest = {
     timestamp: new Date().toISOString(),
@@ -105,43 +145,43 @@ async function main() {
     format: post.format,
     brief: post.brief,
     content: post.content,
-    mediaUrls,
+    imageUrls,
+    videoUrl,
     scheduledFor: scheduledAt.toISOString(),
     bufferStatus: "pending",
   };
 
   if (hasBufferToken(config)) {
-    console.log(`[social] Step 3/3 — scheduling via Buffer for ${scheduledAt.toISOString()}`);
+    console.log(`[social] Step 4/4 — scheduling via Buffer for ${scheduledAt.toISOString()}`);
     try {
-      const profiles = await listProfiles(config);
-      const desired = config.social?.platforms || [];
-      const targets = profiles.filter((p) => desired.includes(p.service));
       if (targets.length === 0) {
-        throw new Error(`No Buffer profile matches platforms ${desired.join(",")} (connected: ${profiles.map((p) => p.service).join(", ")})`);
+        throw new Error(`No Buffer profile matches platforms ${desiredPlatforms.join(",")} (connected: ${profiles.map((p) => p.service).join(", ")})`);
       }
       const posts = [];
       for (const p of targets) {
+        // Per-platform routing : TikTok gets video if available, else carousel; Insta/FB get carousel
+        const useVideo = p.service === "tiktok" && videoUrl;
         const bp = await schedulePost(config, {
           profileId: p.id,
           service: p.service,
-          format: post.format,
+          format: useVideo ? "reel" : post.format,
           text: captionFull,
-          mediaUrls,
-          mediaType: post.mediaType,
+          mediaUrls: useVideo ? [videoUrl] : imageUrls,
+          mediaType: useVideo ? "video" : "image",
           scheduledAt,
         });
-        posts.push({ profile: p.service, id: bp?.id || null });
+        posts.push({ profile: p.service, type: useVideo ? "video" : "carousel", id: bp?.id || null });
       }
       manifest.bufferStatus = "scheduled";
       manifest.bufferPosts = posts;
-      console.log(`[social]   ✓ scheduled on ${posts.map((p) => p.profile).join(", ")}`);
+      console.log(`[social]   ✓ scheduled : ${posts.map((p) => `${p.profile}(${p.type})`).join(", ")}`);
     } catch (err) {
       console.log(`[social]   ⚠ Buffer scheduling failed: ${err.message}`);
       manifest.bufferStatus = "failed";
       manifest.bufferError = err.message;
     }
   } else {
-    console.log(`[social] Step 3/3 — no Buffer token, manifest only`);
+    console.log(`[social] Step 4/4 — no Buffer token, manifest only`);
     manifest.bufferStatus = "manual";
   }
 
