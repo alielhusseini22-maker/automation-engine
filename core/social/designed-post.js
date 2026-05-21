@@ -69,6 +69,8 @@ STRUCTURE :
 - Slides 2-4 : 3 insights factuels (titre court + body 1-2 phrases factuelles). Erreur fréquente, mécanique invisible, ou astuce.
 - Slide 5 : CTA produit (le produit ci-dessus).
 
+IMPORTANT : NE PAS inclure "Lien en bio" ni d'URL dans la caption. Le système ajoute le CTA automatiquement par plateforme (URL sur FB, "Lien en bio" sur Insta/TikTok). Termine plutôt par une question/engagement bait.
+
 Return JSON :
 {
   "hookLine1": "ligne 1 hook 3-6 mots",
@@ -79,7 +81,7 @@ Return JSON :
     { "title": "titre slide 3", "body": "..." },
     { "title": "titre slide 4", "body": "..." }
   ],
-  "captionForPost": "FR caption pour le post Insta (60-120 mots, hook+contenu+CTA 'Lien en bio')",
+  "captionForPost": "FR caption pour le post (60-120 mots, hook + contenu factuel + engagement bait final). PAS de CTA produit ici, le système l'ajoute.",
   "captionHashtags": ["#poilsprecieux", "#poilsprecieuxfr", "..."],
   "altText": "FR alt text 1 phrase"
 }`,
@@ -139,7 +141,7 @@ STRUCTURE :
 - tipTitle : phrase action 6-12 mots (commence par un verbe d'action)
 - tipBody : 2 phrases courtes (15-35 mots total) qui expliquent POURQUOI + COMMENT
 - productMention : optionnel — une ligne subtile qui mentionne le produit comme outil utile (10-20 mots, jamais "achetez", jamais "soldes")
-- captionForPost : FR caption Insta (60-120 mots) qui développe l'astuce + CTA "Lien en bio" si pertinent
+- captionForPost : FR caption Insta (60-120 mots) qui développe l'astuce + termine par engagement bait. NE PAS inclure "Lien en bio" ni d'URL : le système ajoute le CTA par plateforme automatiquement
 
 Return JSON :
 {
@@ -199,7 +201,7 @@ Prix : ${product.price}€
 
 STRUCTURE :
 - benefitLine : phrase 5-10 mots qui résume LE bénéfice clé (visible en grand sur le visuel)
-- captionForPost : FR caption Insta (80-130 mots) : hook 1 ligne + utilité réelle 2-3 phrases + CTA "Lien en bio — ${product.price}€"
+- captionForPost : FR caption Insta (80-130 mots) : hook 1 ligne + utilité réelle 2-3 phrases + mention prix ${product.price}€ + engagement bait final. NE PAS inclure "Lien en bio" ni URL : le système ajoute le CTA par plateforme.
 - captionHashtags : 6-8 hashtags pyramide (brand + FR pet + niche race ou catégorie)
 - altText : 1 phrase
 

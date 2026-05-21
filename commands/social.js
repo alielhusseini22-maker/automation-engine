@@ -82,11 +82,31 @@ async function main() {
   const hashtags = (post.content.captionHashtags && post.content.captionHashtags.length >= 4)
     ? post.content.captionHashtags
     : selectHashtags(config, { count: 7 });
-  const captionFull = `${captionRaw}\n\n${hashtags.join(" ")}`;
+
+  // CTA différencié par plateforme construit plus tard, juste avant schedulePost.
+  const productHandle = post.brief?.product?.handle || null;
+  const productUrl = productHandle
+    ? `https://${config.project.domain}/products/${productHandle}`
+    : `https://${config.project.domain}`;
+
+  function buildCaptionFor(service) {
+    let cta;
+    if (service === "facebook") {
+      // FB : URL clickable dans la caption
+      cta = productHandle ? `\n\n👉 ${productUrl}` : `\n\n👉 ${productUrl}`;
+    } else {
+      // Insta + TikTok : lien en bio
+      cta = `\n\n👉 Lien en bio`;
+    }
+    return `${captionRaw}${cta}\n\n${hashtags.join(" ")}`;
+  }
 
   if (args.dryRun) {
     console.log(`\n[social] DRY RUN — skipping upload + schedule.`);
-    console.log(`Caption:\n${captionRaw}\n\nHashtags:\n${hashtags.join(" ")}\n`);
+    console.log(`Base caption:\n${captionRaw}\n\nHashtags:\n${hashtags.join(" ")}\n`);
+    console.log(`Product URL : ${productUrl}\n`);
+    console.log(`FB caption preview :\n${buildCaptionFor("facebook")}\n`);
+    console.log(`Insta caption preview :\n${buildCaptionFor("instagram")}\n`);
     console.log(`Slides preview:`);
     for (const p of post.mediaPaths) console.log(`  ${p}`);
     await closeBrowser();
@@ -168,11 +188,12 @@ async function main() {
         const isTikTok = p.service === "tiktok";
         const useVideo = isTikTok && videoUrl;
         try {
+          const captionForThisPlatform = buildCaptionFor(p.service);
           const bp = await schedulePost(config, {
             profileId: p.id,
             service: p.service,
             format: useVideo ? "reel" : post.format,
-            text: captionFull,
+            text: captionForThisPlatform,
             mediaUrls: useVideo ? [videoUrl] : imageUrls,
             mediaType: useVideo ? "video" : "image",
             scheduledAt,
