@@ -3,6 +3,8 @@ node_modules/
 .env.local
 projects/*/credentials.json
 projects/*/.cache/
+projects/*/.pexels-used.json
 runs/
+test-output/
 *.log
 .DS_Store

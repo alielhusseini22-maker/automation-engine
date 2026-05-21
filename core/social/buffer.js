@@ -111,22 +111,24 @@ function buildMetadata(service, format = "single", title) {
  * @param {"image"|"video"} [args.mediaType="image"]
  * @param {Date} args.scheduledAt - date de publication
  */
-export async function schedulePost(config, { profileId, service, format, text, imageUrl, mediaType = "image", scheduledAt }) {
-  if (!imageUrl) {
-    throw new Error("Buffer schedulePost requires imageUrl/video URL (assets is mandatory)");
+export async function schedulePost(config, { profileId, service, format, text, mediaUrls, imageUrl, mediaType = "image", scheduledAt }) {
+  // Back-compat : si imageUrl fourni au lieu de mediaUrls, l'utiliser
+  const urls = mediaUrls || (imageUrl ? [imageUrl] : []);
+  if (urls.length === 0) {
+    throw new Error("Buffer schedulePost requires mediaUrls or imageUrl (assets is mandatory)");
   }
   const isoDate = scheduledAt.toISOString();
   const metadata = buildMetadata(service, format, text?.slice(0, 80));
-  const assetEntry = mediaType === "video"
-    ? { video: { url: imageUrl } }
-    : { image: { url: imageUrl } };
+  const assets = urls.map((url) =>
+    mediaType === "video" ? { video: { url } } : { image: { url } }
+  );
   const input = {
     text,
     channelId: profileId,
     dueAt: isoDate,
     schedulingType: "automatic",
     mode: "customScheduled",
-    assets: [assetEntry],
+    assets,
   };
   if (metadata) input.metadata = metadata;
 

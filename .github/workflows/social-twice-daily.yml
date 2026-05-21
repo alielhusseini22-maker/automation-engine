@@ -1,0 +1,66 @@
+name: Social — Twice daily (morning + evening)
+
+on:
+  schedule:
+    # Morning 10h00 Paris (08h00 UTC summer / 09h00 UTC winter — use 08h to favor summer)
+    - cron: "0 8 * * *"
+    # Evening 19h00 Paris (17h00 UTC summer)
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+      slot:
+        description: "Slot (morning|evening), auto si vide"
+        required: false
+
+jobs:
+  social:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Determine slot from cron schedule
+        id: slot
+        run: |
+          hour=$(date -u +"%H")
+          if [ -n "${{ github.event.inputs.slot }}" ]; then
+            echo "value=${{ github.event.inputs.slot }}" >> $GITHUB_OUTPUT
+          elif [ "$hour" -lt "14" ]; then
+            echo "value=morning" >> $GITHUB_OUTPUT
+          else
+            echo "value=evening" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run social post generation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
+          POILS_PRECIEUX_BUFFER_TOKEN: ${{ secrets.POILS_PRECIEUX_BUFFER_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: |
+          node commands/social.js \
+            --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
+            --slot "${{ steps.slot.outputs.value }}"
+
+      - name: Upload preview slides as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: social-${{ steps.slot.outputs.value }}-preview-${{ github.run_id }}
+          path: runs/poils-precieux/social/
+          retention-days: 30
