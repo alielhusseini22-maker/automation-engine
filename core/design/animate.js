@@ -3,9 +3,32 @@
 //
 // Output : MP4 H.264 1080×1920, 25 fps, AAC audio, prêt pour TikTok/Reels.
 
-import { spawn } from "node:child_process";
+import { spawn, execFile } from "node:child_process";
+import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
+
+const execFileP = promisify(execFile);
+
+/**
+ * Inspect un MP4 et retourne info audio (codec, bitrate, channels).
+ * Pour debug : confirme que l'audio est bien dans le fichier généré.
+ */
+export async function probeAudio(filePath) {
+  try {
+    const { stdout } = await execFileP("ffprobe", [
+      "-v", "error",
+      "-select_streams", "a:0",
+      "-show_entries", "stream=codec_name,bit_rate,channels,sample_rate,duration",
+      "-of", "default=noprint_wrappers=1",
+      filePath,
+    ]);
+    const out = stdout.trim();
+    return out || "(no audio stream found)";
+  } catch (err) {
+    return `probe error: ${err.message}`;
+  }
+}
 
 /**
  * Anime un carrousel PNG → MP4 9:16 avec effet Ken Burns et musique optionnelle.
@@ -49,13 +72,9 @@ export async function animateCarousel({
   }
 
   // Filter complex : pour chaque slide, scale+pad au format vertical 9:16 puis zoompan (Ken Burns).
-  // L'image carrée 1080x1080 doit être centrée verticalement sur fond beige (#F4EDE3) pour préserver
-  // la composition du design.
   const PAD_COLOR = "0xF4EDE3"; // beige Poils Précieux
   const parts = [];
   for (let i = 0; i < slideCount; i++) {
-    // 1. scale au format vertical, pad avec fond beige si carré
-    // 2. zoompan : zoom de 1.0 à 1.08 sur la durée (très subtil pro film look)
     parts.push(
       `[${i}:v]` +
         `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,` +
@@ -64,25 +83,28 @@ export async function animateCarousel({
         `[v${i}]`
     );
   }
-  // Concat
+  // Concat video
   parts.push(
     `${Array.from({ length: slideCount }, (_, i) => `[v${i}]`).join("")}concat=n=${slideCount}:v=1:a=0[outv]`
   );
+
+  // Audio : on inclut DANS le filter_complex pour fiabilité (avec atrim explicite à la durée vidéo)
+  if (audioPath) {
+    parts.push(
+      `[${slideCount}:a]atrim=duration=${totalDurationSec},asetpts=PTS-STARTPTS[outa]`
+    );
+  }
 
   args.push("-filter_complex", parts.join(";"));
   args.push("-map", "[outv]");
 
   if (audioPath) {
-    // Audio : map depuis input index slideCount (vient après les inputs vidéo).
-    // Pas de filter audio (entre en conflit avec filter_complex côté vidéo).
-    // -t totalDurationSec force la durée de sortie sans ambiguïté.
     args.push(
-      "-map", `${slideCount}:a`,
+      "-map", "[outa]",
       "-c:a", "aac",
       "-b:a", "192k",
       "-ac", "2",
-      "-ar", "44100",
-      "-t", String(totalDurationSec)
+      "-ar", "44100"
     );
   }
 

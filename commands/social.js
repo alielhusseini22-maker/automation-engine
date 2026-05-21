@@ -21,7 +21,7 @@ import { selectHashtags } from "../core/social/themes.js";
 import { hasBufferToken, listProfiles, schedulePost } from "../core/social/buffer.js";
 import { generateDesignedPost } from "../core/social/designed-post.js";
 import { closeBrowser } from "../core/design/render.js";
-import { animateCarousel, ffmpegAvailable } from "../core/design/animate.js";
+import { animateCarousel, ffmpegAvailable, probeAudio } from "../core/design/animate.js";
 import { pickMusicTrack, moodForContext } from "../core/design/music.js";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -145,6 +145,9 @@ async function main() {
         slideDurationSec: post.mediaPaths.length >= 5 ? 3 : 4, // carousel 5 slides → 15s, single → 4s
       });
       console.log(`  ✓ animated MP4 generated`);
+      // Diagnostic : vérifier que l'audio est bien dans le MP4
+      const audioInfo = await probeAudio(animatedPath);
+      console.log(`  audio probe: ${audioInfo.replace(/\n/g, " | ")}`);
       const buf = (await import("node:fs")).readFileSync(animatedPath);
       console.log(`  uploading + processing video to Shopify Files (this takes 30-60s)...`);
       videoUrl = await uploadVideoToShopifyFiles(config, {
