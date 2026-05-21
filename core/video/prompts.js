@@ -1,128 +1,131 @@
-// Direction artistique cinématographique pour les prompts vidéo IA.
-// Objectif : générer des Reels qui ressemblent à des vidéos téléphone humaines,
-// pas à des assets IA mous. Cinematic but intime.
+// Direction artistique cinématographique pour la génération vidéo IA (Minimax Hailuo 02 / Luma / Kling).
+// Objectif : Reels qui ressemblent à de vrais clips téléphone humains. Vraies actions visibles, pas juste micro-mouvements.
 
-const FILM_LOOK = `Cinematic 9:16 vertical mobile-shot aesthetic. Shallow depth of field, soft natural window light from the left (golden hour quality), warm beige and cream tones throughout the scene, subtle film grain, handheld phone feel (very slight natural camera motion). NO text overlays, NO logos, NO graphics. Photorealistic, not stylized, not animated, not cartoon.`;
+const FILM_LOOK = `Shot on a modern smartphone in 9:16 vertical, HDR, shallow depth of field, soft natural daylight from a side window casting warm golden light. Cinematic but intimate — slight handheld camera movement, breathing feel. Film grain subtle. Color grade: warm beige and cream tones throughout. NO text overlays, NO logos, NO graphics overlaid.`;
 
-const PET_DIRECTION = `Realistic pet behavior — the animal moves like a real animal, not an exaggerated cartoon. Authentic emotion, calm intimate moment. Camera focuses on subtle micro-actions (ear twitch, slow blink, paw flex, head tilt) rather than dramatic action.`;
+const REALISM_BAR = `Hyperrealistic, indistinguishable from a real iPhone 16 Pro recording. The animal's behavior must look documentary-grade: real anatomy, real fur physics (individual hairs catch the light), real eye reflections, real breathing, real micro-expressions. The motion must be physically plausible — no morphing, no extra limbs, no glowing eyes, no plastic skin texture.`;
 
-const ANTI_AI_TELL = `Avoid uncanny features: no extra paws, no morphing fur, no impossible anatomy, no glowing eyes, no plastic skin. The pet must look like a documentary still of a real dog or cat.`;
+const BRAND_SETTING = `Setting: Scandinavian minimalist Parisian apartment interior — warm oak wood floor, cream linen drape, beige walls. Visible accessories must be premium and tasteful (no clutter): one wooden bristle brush, one cream knit blanket, one matte beige ceramic bowl. Lived-in but uncluttered. Soft natural daylight from a window on the left.`;
 
-const BRAND_AESTHETIC = `Setting: Scandinavian minimalist interior — warm cream linen surface, oak wood floor, neutral beige walls, soft daylight from a window. Visible accessories must be premium and minimal : one wooden grooming brush, one cream linen blanket, one ceramic beige bowl. Tactile, lived-in but uncluttered.`;
+const ANTI_AI = `Critical: avoid all AI tells. NO morphing fur, NO extra paws or limbs, NO impossible anatomy, NO glowing or symmetrical eyes, NO plastic skin, NO weird teeth, NO floating accessories, NO inconsistent lighting. If the animal moves toward the camera, its size scales correctly. If a hand enters the frame, it has five fingers in correct anatomy.`;
 
 /**
- * Banque de prompts cinématographiques par thème.
- * Chaque entrée = un mini-scénario tournable, varié, brand-aligned.
- * L'engine pioche aléatoirement pour éviter la répétition.
+ * Banque de scénarios cinématographiques.
+ * Format : action visible + direction caméra explicite + durée 6-10s.
+ * Plus de motion réelle que dans la v1 (lick the camera, jump on bed, run in frame, etc.)
  */
 export const VIDEO_PROMPTS = {
   tendresse: [
     {
-      title: "Cocker brossage soir",
-      prompt: `A serene long-haired golden cocker spaniel lying calmly on a cream linen surface, head resting on its paws, eyes slowly closing as a human hand gently brushes the long ear fur with a wooden bristle brush. Soft warm side window light. Five seconds of micro-action: the cocker exhales, the ear fur lifts slightly with the brush stroke. Intimate, peaceful, late afternoon mood.`,
+      title: "Cocker s'approche de la caméra",
+      prompt: `A golden English cocker spaniel with long wavy fur lies on a cream linen blanket. The camera holds still on its sleepy face. The cocker slowly lifts its head, looks directly into the lens with soft brown eyes, then leans forward and gently licks the camera. The lens slightly fogs from breath. Six seconds of warm tender contact. Beige interior background softly blurred.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Chat tabby fenêtre",
-      prompt: `A brown tabby cat sitting on a warm beige linen-covered cushion next to a window, sunbeam catching the fur. Five seconds: the cat slowly closes its eyes (slow blink — the cat trust signal), tail tip flicks once gently. Background softly blurred — a wooden floor, a folded cream blanket. Window light warm and golden. Intimate, calm, observational.`,
+      title: "Chat saute sur le lit",
+      prompt: `A handheld phone shot of a cream-and-beige longhair cat (Ragdoll or Maine Coon) standing on a wooden floor next to a fluffy cream pet bed. The cat looks up at the camera, then in one fluid motion leaps onto the bed, lands softly, walks two steps, and curls up in a perfect circle. The camera slowly pushes in to frame the cat's contented face. Six seconds total. Soft window light warming the fur.`,
       species: "chat",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Chiot golden cuddle",
-      prompt: `A small golden retriever puppy (8-10 weeks) nestled in a cream linen blanket on a wooden floor, only its head and front paws visible. The puppy looks up at the camera with sleepy eyes, then stretches one paw forward and yawns. Soft morning daylight. Beige and cream tones. Five seconds of pure tenderness.`,
+      title: "Chiot golden court vers caméra",
+      prompt: `A small golden retriever puppy (8-10 weeks, fluffy cream coat) bounds clumsily across a wooden floor toward the camera. The phone is held low, almost at floor level. The puppy reaches the camera, tries to lick the lens, tumbles slightly, then sits down looking up with big curious eyes. Tail wagging visibly throughout. Six seconds of pure puppy energy. Soft natural light.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Chaton calico panier",
-      prompt: `A small calico kitten curled inside a wicker basket lined with a cream knit blanket. Five seconds: the kitten lifts its head, looks at the camera with curious eyes, then settles back down with a soft yawn. Warm afternoon light filters in. Beige wooden floor visible at the bottom of the frame. Intimate documentary feel.`,
+      title: "Brossage cocker mains visibles",
+      prompt: `A handheld phone shot, slight overhead angle, of a golden cocker spaniel lying calmly on a cream linen surface. A human hand (visible in frame, light skin) holds a wooden bristle grooming brush and strokes slowly through the long wavy ear fur of the dog. The fur lifts and falls with each brush stroke, individual hairs visible. The cocker's eyes close in pleasure, then a small contented sigh visible in its chest rise. Six seconds. Warm afternoon window light.`,
+      species: "chien",
+      duration: 6,
+    },
+    {
+      title: "Chat tabby slow blink ralenti",
+      prompt: `Extreme close-up on the face of a brown mackerel tabby cat. The cat looks directly at the camera, then performs a deliberate slow blink — eyes closing fully, then opening. The camera holds steady at face level. Six seconds, but the slow blink takes 3-4 seconds, intensely intimate. Sun-warm light catches the golden eyes and individual whiskers.`,
       species: "chat",
-      duration: 5,
+      duration: 6,
     },
   ],
 
   inspiration: [
     {
-      title: "Chien cocon plaid",
-      prompt: `A small dog (Cavalier King Charles or similar gentle breed) deeply asleep curled on a thick cream knit blanket placed on an oak wood floor. Soft golden window light. Five seconds: the dog's chest rises and falls slowly, one ear twitches slightly. No movement otherwise. Pure calm. Beige walls in background, completely uncluttered.`,
+      title: "Chien soupire et s'enfonce",
+      prompt: `Wide handheld phone shot of a small adult dog (Cavalier King Charles, ruby coat) curled on a thick cream knit blanket on an oak floor. Sunbeam crosses the frame from the left window. Six seconds: the dog lets out a visible deep sigh (chest rises and falls), shifts position to nuzzle deeper into the blanket, tucks its nose under its paw, and settles. Camera slowly pushes in 20%. Calm cozy afternoon energy.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Chat lit moelleux",
-      prompt: `A fluffy beige-and-white cat (Ragdoll or longhair domestic) sprawled belly-up on a plush cream-colored round pet bed, paws relaxed in the air. Five seconds: the cat slowly turns its head toward the camera, blinks once, then settles back. Soft natural daylight. The setting is a minimalist interior with warm wood floor and beige walls.`,
+      title: "Chat étire sur lit moelleux",
+      prompt: `A fluffy beige-and-white ragdoll cat lies belly-up on a plush cream round pet bed in a sunlit corner of a minimalist apartment. Six seconds: the cat suddenly stretches dramatically — front paws extend forward, back arches, then it rolls onto its side and looks at the camera with relaxed eyes. The camera holds steady at floor level. Visible whisker movement, eye contact at the end. Warm window light.`,
       species: "chat",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Chien lecture",
-      prompt: `An adult medium-sized dog (Whippet or similar lean breed, beige coat) lying calmly on its side on a cream rug, head resting on its front paws. Beside the dog, a partially visible open book and a steaming mug of coffee. Five seconds: the dog's eyes are closed, ear twitches once, deep breath cycle. Soft afternoon window light. Intimate quiet moment.`,
+      title: "Chien lecture bouge oreilles",
+      prompt: `Wide shot of an adult whippet (beige coat, lean) lying on a cream rug. Beside the whippet, an open hardcover book and a steaming ceramic mug. Six seconds: the whippet's ears swivel toward a sound off-camera (responding to something), it lifts its head, looks toward the source, then settles back down with a soft exhale. Soft afternoon side light. Cozy book-with-dog atmosphere.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
   ],
 
   "behind-scenes": [
     {
-      title: "Brossage gros plan",
-      prompt: `Close-up macro view of a wooden grooming brush running gently through long golden fur on a beige linen surface. Five seconds of slow brush motion — the bristles separate the fur, a few loose strands gather between bristles. Soft natural side light. No human face visible, just the brush and the fur. Documentary close-up, cinematic shallow depth of field.`,
+      title: "Brossage cocker close-up dynamique",
+      prompt: `Extreme close-up macro of a wooden bristle brush running through long golden cocker spaniel ear fur on a beige linen surface. Six seconds: the brush enters frame from the right, slowly strokes downward through the wavy fur, bristles separating individual strands of hair. A few loose hairs gather visibly in the bristles. The brush exits frame and re-enters for a second stroke. Soft natural side light. The texture of every hair visible. Documentary close-up.`,
       species: null,
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Préparation gamelle",
-      prompt: `Close-up: a hand carefully scooping dry kibble from a paper bag into a matte beige ceramic bowl on a warm wooden countertop. Five seconds: the scoop tips, kibble falls, the bowl settles. Side daylight. Background softly blurred, beige tones. Premium kitchen aesthetic, no labels visible.`,
+      title: "Préparation gamelle céramique",
+      prompt: `Handheld phone shot, slight overhead, of a hand pouring premium dry kibble from a brown paper bag into a matte beige ceramic bowl on a warm wood countertop. Six seconds: the bag tilts, the kibble flows in a controlled stream, fills the bowl 1/3, the hand straightens the bag, taps it to free remaining kibble, then sets it down. The bowl sits next to a small wooden water bowl. Side natural daylight. Premium kitchen aesthetic.`,
       species: null,
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Tapis préparation",
-      prompt: `A pair of hands gently smoothing out a cream-colored pet bed cushion on a wooden floor, fluffing it to make it inviting. Five seconds: the hands pat the cushion, then a small dog softly steps into frame and circles before settling down. Soft golden window light. Intimate moment of preparing a comfortable space.`,
+      title: "Lit installation chien arrive",
+      prompt: `Wide handheld phone shot of a cream-colored plush round pet bed being placed on a wood floor. A pair of hands (lightly visible) smoothes the cushion, fluffs it. Six seconds: as the hands withdraw, a small dog (Cavalier King Charles) softly walks into frame from the right, sniffs the bed cautiously, circles once, then settles down comfortably, head between paws. Camera holds steady. Warm window light. Intimate documenting of pet routine.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
   ],
 
   astuce: [
     {
-      title: "Chat fontaine",
-      prompt: `A serene grey-and-white cat approaches a sleek ceramic water fountain on a wooden floor. Five seconds: the cat sniffs cautiously, then dips its head to drink, soft splash on its whiskers. Side daylight, beige minimal interior in background. Documentary observational. The fountain looks premium, made of matte beige ceramic.`,
+      title: "Chat fontaine eau gouttes",
+      prompt: `Handheld phone shot at low angle of a sleek matte beige ceramic pet water fountain, water gently flowing. A grey-and-white tabby cat enters frame from the right, approaches cautiously, sniffs the fountain edge, then dips its head and drinks from the flowing stream. Water drops cling to its whiskers. Six seconds. Soft side daylight. The cat lifts its head, looks at the camera briefly, then goes back to drinking.`,
       species: "chat",
-      duration: 5,
+      duration: 6,
     },
     {
-      title: "Lave-pattes",
-      prompt: `Close-up of a dog's muddy paw being gently lowered into a cylindrical paw-washing cup filled with water on a wooden floor. Five seconds: the paw rotates slowly inside the cup, water swirls, a hand from above stabilizes the dog's leg. The paw emerges clean. Soft daylight, kitchen entryway setting.`,
+      title: "Lave-pattes rotation",
+      prompt: `Close-up handheld phone shot of a dog's muddy paw being lowered into a cylindrical pet paw-washing cup filled with water. Six seconds: a hand stabilizes the dog's leg from above, the paw rotates slowly inside the cup (visible swirling water), then emerges cleaner. The hand lifts the paw out and pats it with a soft cream towel. Wooden floor entryway setting. Soft daylight.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
   ],
 
   guide: [
     {
-      title: "Portrait race",
-      prompt: `Studio portrait quality view of a beautiful long-haired dog (English cocker spaniel or similar) sitting calmly on a beige linen backdrop. Five seconds: the dog turns its head slightly toward the camera, ears lifting in attention, eyes meeting lens. Soft three-quarter portrait lighting. Editorial premium pet brand aesthetic. Subject takes up 70% of frame, centered.`,
+      title: "Portrait cocker tourne tête",
+      prompt: `Studio quality portrait shot of an adult English cocker spaniel sitting calmly on a beige linen backdrop. Soft three-quarter front lighting. Six seconds: the cocker faces forward, then slowly turns its head 30 degrees to the right, ears lifting in attention as if hearing a soft sound, eyes following an imaginary point, then returns to face the camera. Subject 70% of frame, perfectly centered. Premium pet brand editorial. Background slightly out of focus.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
   ],
 
   communaute: [
     {
-      title: "Câlin chien",
-      prompt: `A close-up over-the-shoulder view of a person (face mostly out of frame, only the chin and jaw visible) hugging a medium-sized dog (Labrador or golden) who closes its eyes contentedly. Five seconds: the dog's tail wags gently behind, the person gently scratches behind the ear. Warm window light, beige minimal interior, intimate moment.`,
+      title: "Câlin chien gros plan",
+      prompt: `Intimate over-the-shoulder phone shot, framed close. A medium-sized adult dog (Labrador, beige coat) sits next to a person whose face is mostly out of frame (only chin and shoulder visible). Six seconds: the person's hand enters frame and scratches gently behind the dog's ear, the dog closes its eyes in pleasure, head leaning into the touch, tail visibly wagging behind. Warm window light. Beige minimal interior background.`,
       species: "chien",
-      duration: 5,
+      duration: 6,
     },
   ],
 };
 
 /**
  * Pioche aléatoirement un prompt vidéo pour un thème + species donné(s).
- * @param {string} theme
- * @param {string|null} species - "chien"|"chat"|null (any)
  */
 export function pickVideoPrompt(theme, species = null) {
   const pool = VIDEO_PROMPTS[theme] || VIDEO_PROMPTS.tendresse;
@@ -135,35 +138,20 @@ export function pickVideoPrompt(theme, species = null) {
   return buildFullPrompt(picked);
 }
 
-/**
- * Combine le prompt scénario avec la direction artistique brand.
- */
 function buildFullPrompt(scenario) {
-  const fullPrompt = `${scenario.prompt}
-
-${FILM_LOOK}
-
-${PET_DIRECTION}
-
-${BRAND_AESTHETIC}
-
-${ANTI_AI_TELL}`;
-
+  const fullPrompt = `${scenario.prompt}\n\n${FILM_LOOK}\n\n${REALISM_BAR}\n\n${BRAND_SETTING}\n\n${ANTI_AI}`;
   return {
     title: scenario.title,
     prompt: fullPrompt,
     species: scenario.species,
-    duration: scenario.duration || 5,
+    duration: scenario.duration || 6,
   };
 }
 
-/**
- * Construit un prompt vidéo CUSTOM depuis un contexte arbitraire (utilisé par auto-promo produit).
- */
-export function buildCustomVideoPrompt({ scenario, species = null, duration = 5 }) {
+export function buildCustomVideoPrompt({ scenario, species = null, duration = 6 }) {
   return {
     title: "custom",
-    prompt: `${scenario}\n\n${FILM_LOOK}\n\n${PET_DIRECTION}\n\n${BRAND_AESTHETIC}\n\n${ANTI_AI_TELL}`,
+    prompt: `${scenario}\n\n${FILM_LOOK}\n\n${REALISM_BAR}\n\n${BRAND_SETTING}\n\n${ANTI_AI}`,
     species,
     duration,
   };

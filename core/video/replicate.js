@@ -21,19 +21,23 @@ export function hasReplicateToken() {
   return !!process.env.REPLICATE_API_TOKEN;
 }
 
-const DEFAULT_MODEL = "luma/ray-flash-2-720p";
+// Modèle par défaut : Minimax Hailuo 02 (Pro), excellent en réalisme + motion humaine/animale.
+// Alternatives : kwaivgi/kling-v2.1 (très photoréaliste, plus cher), luma/dream-machine.
+const DEFAULT_MODEL = "minimax/hailuo-02";
 
 /**
  * Génère une vidéo via Replicate et la télécharge localement.
  * @returns { path, model, prompt }
  */
-export async function generateVideo({ prompt, aspectRatio = "9:16", duration = 5, model = DEFAULT_MODEL, outputPath }) {
+export async function generateVideo({ prompt, aspectRatio = "9:16", duration = 6, model = DEFAULT_MODEL, outputPath, resolution = "768p" }) {
   const c = client();
   const t0 = Date.now();
+  // Hailuo 02 input schema: prompt + duration (6 or 10) + resolution + prompt_optimizer
   const input = {
     prompt,
-    aspect_ratio: aspectRatio,
     duration: parseInt(duration, 10),
+    resolution,
+    prompt_optimizer: true,
   };
 
   const output = await c.run(model, { input });
