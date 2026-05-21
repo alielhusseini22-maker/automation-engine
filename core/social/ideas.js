@@ -9,12 +9,15 @@ import { researchJSON } from "../claude/research.js";
  * Fetch un échantillon du catalogue actif pour nourrir le brainstorm.
  */
 async function fetchCatalogSnapshot(config) {
+  // Note: Shopify Admin API n'expose pas BEST_SELLING comme sortKey (Storefront API only).
+  // On utilise UPDATED_AT (produits les plus récemment modifiés = ceux qui méritent attention).
   const data = await shopifyQuery(
     config,
     `query {
-      products(first: 30, query: "status:active", sortKey: BEST_SELLING) {
+      products(first: 30, query: "status:active", sortKey: UPDATED_AT, reverse: true) {
         nodes {
           id title productType tags
+          totalInventory
           variants(first: 5) { nodes { title } }
         }
       }
@@ -24,6 +27,7 @@ async function fetchCatalogSnapshot(config) {
     title: p.title,
     type: p.productType,
     tags: p.tags,
+    inventory: p.totalInventory,
     sampleVariants: p.variants.nodes.slice(0, 3).map((v) => v.title),
   }));
 }
