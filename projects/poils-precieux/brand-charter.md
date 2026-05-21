@@ -82,19 +82,32 @@
 
 ## 6. Stratégie social — calendrier éditorial
 
-**Cadence** : 1 post / jour, Instagram + TikTok (même contenu, format adapté).
+**Cadence** : 1 post / jour, Instagram + Facebook + TikTok (même contenu, format adapté).
+
+**Principe absolu** : pas de contenu fictionnel. Les histoires de clients sont attendues jusqu'à avoir des vrais témoignages (UGC). Avant ça, on fait de la pédagogie produit + du contenu émotionnel réel (vrai chien, vrai chat, vrai moment).
+
+**Sources de contenu hiérarchisées** :
+1. **Content queue** (`projects/poils-precieux/content-queue/`) — vidéos / photos réelles que le founder ou son entourage filme
+2. **Shopify products** — vraies photos produits de la boutique pour les jours "produit" et "cas d'usage"
+3. **Pexels stock** — fallback automatique quand queue vide, vraies vidéos d'animaux libres de droit (jamais présenté comme contenu brand)
+4. **AI image éditoriale** — uniquement pour les jours guide/communauté (visuel concept, pas faux animal)
 
 **Rotation thématique par jour** :
 
-| Jour | Thème | Format dominant | Exemple |
-|---|---|---|---|
-| **Lundi** | Guide / Pédagogie | Carrousel 3-5 slides | "5 erreurs en brossant son chien" |
-| **Mardi** | Mise en avant produit | Single image | Beagle + Marley brosse, caption utilité |
-| **Mercredi** | Astuce express | Reel 15s | "Faire boire son chat en 1 geste" |
-| **Jeudi** | Témoignage / Avant-après | Carrousel 2 slides | Photo client avec son animal |
-| **Vendredi** | Question communauté | Image + question | "Quel est le plus beau pelage ?" |
-| **Samedi** | Behind-the-scenes / Process | Reel ou carousel | "Comment on sélectionne nos brosses" |
-| **Dimanche** | Inspiration / chiot mignon | Single image | Chat dormant sur plaid Snuggly |
+| Jour | Thème | Source primaire | Fallback | Format |
+|---|---|---|---|---|
+| **Lundi** | Guide / Pédagogie | queue ou IA visuelle | skip | Single |
+| **Mardi** | Mise en avant produit | Shopify product photo | AI product image | Single |
+| **Mercredi** | Tendresse / Émotion | content-queue | Pexels stock | Reel (9:16) |
+| **Jeudi** | Cas d'usage produit (factuel) | Shopify product photo | AI product image | Single |
+| **Vendredi** | Question communauté | queue ou IA visuelle | skip | Single |
+| **Samedi** | Behind-scenes / Process | content-queue | Pexels stock | Reel |
+| **Dimanche** | Inspiration / Cute moment | content-queue | Pexels stock | Reel |
+
+**Notes** :
+- Le jour **Témoignage** reste désactivé jusqu'à obtention de vraies photos clients (UGC). Quand un client envoie un retour réel + photo : ajouter à `content-queue/` avec `meta.json: { isRealTestimonial: true }`.
+- Les jours `source: shopify_product` (mardi, jeudi) cherchent un produit Shopify avec tag `nouveau-produit` (et pas `promo-sent`). Si aucun → fallback image AI à partir de la fiche produit.
+- Les vidéos Pexels mentionnent toujours qu'elles sont d'inspiration générale ("Ce moment qu'on cherche tous…") — jamais attribuées à un chat/chien spécifique.
 
 **Hashtags** (rotation, 5-8 par post) :
 
@@ -111,12 +124,20 @@ Universal (limité) :
 `#petlife` `#petlovers` `#dogsofinstagram` `#catsofinstagram`
 
 **Caption format** :
-- Ligne 1 : hook 5-10 mots (souvent une question ou stat)
-- Lignes 2-4 : 1-2 phrases explicatives
+- Ligne 1 : hook 5-12 mots (souvent une question ou observation)
+- Lignes 2-4 : 1-3 phrases explicatives, factuelles, jamais d'histoire client fictive
 - Ligne 5 : utilité concrète + lien produit si pertinent (`bio.link/poilsprecieux`)
 - Bloc hashtags séparé en bas (5-8)
 
-Longueur cible : 80-150 mots max.
+Longueur cible : 60-150 mots max.
+
+**Lignes rouges absolues** (jamais à enfreindre, même par accident IA) :
+- ❌ Inventer un client ("Claire nous a écrit…", "Mathieu, propriétaire de…")
+- ❌ Inventer un témoignage ("Trois semaines plus tard…")
+- ❌ Inventer un nom d'animal qui n'est pas réellement dans le média
+- ❌ Référencer "slide 2", "swipe", "carrousel" si le post est un single
+- ❌ Émoji stream ("✨🔥💥"), urgence factice, "Bestseller!", "Plus que X en stock!"
+- ❌ Anglicismes superflus ("shooter un post", "engager la community", "ASAP")
 
 ---
 

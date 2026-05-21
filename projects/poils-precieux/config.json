@@ -25,6 +25,7 @@
   "buffer": {
     "envToken": "POILS_PRECIEUX_BUFFER_TOKEN",
     "profiles": {
+      "facebook": null,
       "instagram": null,
       "tiktok": null
     }
@@ -83,15 +84,15 @@
   "social": {
     "cadence": "daily",
     "publishTime": "18:00",
-    "platforms": ["instagram", "tiktok"],
+    "platforms": ["facebook", "instagram", "tiktok"],
     "weeklySchedule": {
-      "monday": { "theme": "guide", "format": "carousel" },
-      "tuesday": { "theme": "produit", "format": "single" },
-      "wednesday": { "theme": "astuce", "format": "reel" },
-      "thursday": { "theme": "temoignage", "format": "carousel" },
-      "friday": { "theme": "communaute", "format": "single" },
-      "saturday": { "theme": "behind-scenes", "format": "reel" },
-      "sunday": { "theme": "inspiration", "format": "single" }
+      "monday":    { "theme": "guide",             "format": "single", "source": "ai_or_queue",     "fallback": "skip" },
+      "tuesday":   { "theme": "produit",           "format": "single", "source": "shopify_product", "fallback": "ai_image" },
+      "wednesday": { "theme": "tendresse",         "format": "reel",   "source": "queue",           "fallback": "pexels" },
+      "thursday":  { "theme": "cas-usage-produit", "format": "single", "source": "shopify_product", "fallback": "ai_image" },
+      "friday":    { "theme": "communaute",        "format": "single", "source": "ai_or_queue",     "fallback": "skip" },
+      "saturday":  { "theme": "behind-scenes",     "format": "reel",   "source": "queue",           "fallback": "pexels" },
+      "sunday":    { "theme": "inspiration",       "format": "reel",   "source": "queue",           "fallback": "pexels" }
     },
     "hashtagsCore": ["#poilsprecieux", "#poilsprecieuxfr"],
     "hashtagsCategoryPool": {

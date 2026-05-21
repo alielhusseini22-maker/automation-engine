@@ -1,15 +1,9 @@
-// Client Buffer — publication unifiée Instagram + TikTok via Buffer API.
-// Docs: https://buffer.com/developers/api
-//
-// Workflow:
-//   1. Upload image vers Buffer (ou utiliser un URL public — on uploadera via Shopify CDN ou imgur)
-//   2. Créer un "update" (post) sur chaque profil avec scheduledAt
-//
-// Note : pour MVP, on génère un manifest JSON localement et on fait l'upload via Buffer
-// que si BUFFER_ACCESS_TOKEN est défini. Sans token = on output juste le manifest pour
-// review manuelle / post manuel.
+// Client Buffer — nouvelle API GraphQL (beta, 2026).
+// Doc : https://developers.buffer.com
+// Auth : Authorization: Bearer <personal key from publish.buffer.com/settings/api>
+// Endpoint : https://api.buffer.com/graphql
 
-const BUFFER_API = "https://api.bufferapp.com/1";
+const BUFFER_GQL = "https://api.buffer.com/graphql";
 
 export function hasBufferToken(config) {
   const envName = config.buffer?.envToken;
@@ -23,45 +17,132 @@ function token(config) {
   return v;
 }
 
-export async function bufferRequest(config, method, path, body) {
+async function bufferGQL(config, query, variables = {}) {
   const t = token(config);
-  const url = `${BUFFER_API}${path}?access_token=${t}`;
-  const opts = { method };
-  if (body) {
-    opts.headers = { "Content-Type": "application/x-www-form-urlencoded" };
-    opts.body = new URLSearchParams(body).toString();
-  }
-  const res = await fetch(url, opts);
+  const res = await fetch(BUFFER_GQL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${t}`,
+    },
+    body: JSON.stringify({ query, variables }),
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Buffer ${method} ${path} failed (${res.status}): ${text.slice(0, 300)}`);
+    throw new Error(`Buffer GraphQL ${res.status}: ${text.slice(0, 400)}`);
   }
-  return await res.json();
+  const json = await res.json();
+  if (json.errors) {
+    throw new Error(`Buffer GraphQL errors: ${JSON.stringify(json.errors)}`);
+  }
+  return json.data;
 }
 
 /**
- * Liste les profiles Buffer connectés (pour identifier instagram_id, tiktok_id).
+ * Récupère l'organizationId du compte authentifié.
+ * Prend la 1ère organisation (en général il n'y en a qu'une).
+ */
+async function fetchOrganizationId(config) {
+  const data = await bufferGQL(
+    config,
+    `query { account { organizations { id name } } }`
+  );
+  const orgs = data?.account?.organizations || [];
+  if (orgs.length === 0) {
+    throw new Error("No organization found on Buffer account");
+  }
+  return orgs[0].id;
+}
+
+/**
+ * Liste les channels (profiles social) connectés.
+ * @returns Array<{ id, name, service }>
+ *   service = "instagram" | "facebook" | "tiktok" | "twitter" | "linkedin" | ...
  */
 export async function listProfiles(config) {
-  return await bufferRequest(config, "GET", "/profiles.json");
+  const orgId = await fetchOrganizationId(config);
+  const data = await bufferGQL(
+    config,
+    `query($input: ChannelsInput!) {
+      channels(input: $input) {
+        id
+        name
+        service
+      }
+    }`,
+    { input: { organizationId: orgId } }
+  );
+  return data.channels || [];
 }
 
 /**
- * Crée un post programmé sur un profil (Instagram, TikTok, etc.).
- * Buffer accepte text + media URL.
- *
+ * Construit le metadata service-specific obligatoire pour Buffer.
+ * - instagram : { type, shouldShareToFeed } requis
+ * - facebook  : { type } requis
+ * - tiktok    : optionnel (titre photo)
+ */
+function buildMetadata(service, format = "single", title) {
+  // format → postType :  reel format = reel, sinon = post
+  const postType = format === "reel" ? "reel" : "post";
+
+  if (service === "instagram") {
+    return { instagram: { type: postType, shouldShareToFeed: true } };
+  }
+  if (service === "facebook") {
+    return { facebook: { type: postType } };
+  }
+  if (service === "tiktok") {
+    return title ? { tiktok: { title } } : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Crée un post programmé.
+ * Schema: CreatePostInput requires schedulingType, channelId, assets, mode.
+ * For specific datetime, use mode: customScheduled + dueAt (DateTime).
+ * Instagram/Facebook also require service-specific metadata.
  * @param {object} args
- * @param {string} args.profileId - id du profile Buffer
+ * @param {string} args.profileId - channelId Buffer
+ * @param {string} args.service - "instagram"|"facebook"|"tiktok"
+ * @param {string} args.format - "single"|"carousel"|"reel" (drives postType)
  * @param {string} args.text - caption complet
  * @param {string} args.imageUrl - URL publique de l'image
  * @param {Date} args.scheduledAt - date de publication
  */
-export async function schedulePost(config, { profileId, text, imageUrl, scheduledAt }) {
-  return await bufferRequest(config, "POST", "/updates/create.json", {
-    "profile_ids[]": profileId,
+export async function schedulePost(config, { profileId, service, format, text, imageUrl, scheduledAt }) {
+  if (!imageUrl) {
+    throw new Error("Buffer schedulePost requires imageUrl (assets is mandatory)");
+  }
+  const isoDate = scheduledAt.toISOString();
+  const metadata = buildMetadata(service, format, text?.slice(0, 80));
+  const input = {
     text,
-    "media[picture]": imageUrl,
-    "media[thumbnail]": imageUrl,
-    scheduled_at: Math.floor(scheduledAt.getTime() / 1000),
-  });
+    channelId: profileId,
+    dueAt: isoDate,
+    schedulingType: "automatic",
+    mode: "customScheduled",
+    assets: [{ image: { url: imageUrl } }],
+  };
+  if (metadata) input.metadata = metadata;
+
+  const data = await bufferGQL(
+    config,
+    `mutation($input: CreatePostInput!) {
+      createPost(input: $input) {
+        ... on PostActionSuccess {
+          post { id text dueAt }
+        }
+        ... on MutationError {
+          message
+        }
+      }
+    }`,
+    { input }
+  );
+  const result = data.createPost;
+  if (result?.message) {
+    throw new Error(`Buffer createPost error: ${result.message}`);
+  }
+  return result?.post;
 }
