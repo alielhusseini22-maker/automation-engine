@@ -73,6 +73,7 @@
     "cadence": "weekly",
     "dayOfWeek": "wednesday",
     "publishTime": "09:00",
+    "author": "Équipe Poils Précieux",
     "topicRotation": ["guide-pratique", "comparatif-produits", "saisonnier", "sante-conseil"],
     "wordsTarget": 1200,
     "wordsMin": 800,

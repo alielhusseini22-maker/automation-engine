@@ -77,7 +77,8 @@ export async function uploadImageBuffer(config, { buffer, filename, mimeType = "
   return await postBinaryToTarget({ target, buffer, mimeType, filename });
 }
 
-export async function createArticle(config, { blogId, title, body, summary, imageUrl, imageAlt, tags = [], handle, isPublished = true }) {
+export async function createArticle(config, { blogId, title, body, summary, imageUrl, imageAlt, tags = [], handle, isPublished = true, authorName }) {
+  const name = authorName || config.blog?.author || "Équipe Poils Précieux";
   const data = await shopifyQuery(
     config,
     `mutation($article: ArticleCreateInput!) {
@@ -95,6 +96,7 @@ export async function createArticle(config, { blogId, title, body, summary, imag
         handle,
         isPublished,
         tags: tags.join(","),
+        author: { name },
         ...(imageUrl ? { image: { url: imageUrl, altText: imageAlt || title } } : {}),
       },
     }
