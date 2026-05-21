@@ -159,8 +159,12 @@ async function main() {
       }
       const posts = [];
       for (const p of targets) {
-        // Per-platform routing : TikTok gets video if available, else carousel; Insta/FB get carousel
-        const useVideo = p.service === "tiktok" && videoUrl;
+        // Per-platform routing :
+        //   - TikTok : vidéo MP4 si dispo + mode notification (tu pickes le son trending dans l'app)
+        //   - Insta + FB : carrousel images, mode automatic (publication full auto)
+        const isTikTok = p.service === "tiktok";
+        const useVideo = isTikTok && videoUrl;
+        const schedulingType = isTikTok ? "notification" : "automatic";
         const bp = await schedulePost(config, {
           profileId: p.id,
           service: p.service,
@@ -169,8 +173,14 @@ async function main() {
           mediaUrls: useVideo ? [videoUrl] : imageUrls,
           mediaType: useVideo ? "video" : "image",
           scheduledAt,
+          schedulingType,
         });
-        posts.push({ profile: p.service, type: useVideo ? "video" : "carousel", id: bp?.id || null });
+        posts.push({
+          profile: p.service,
+          type: useVideo ? "video" : "carousel",
+          mode: schedulingType,
+          id: bp?.id || null,
+        });
       }
       manifest.bufferStatus = "scheduled";
       manifest.bufferPosts = posts;

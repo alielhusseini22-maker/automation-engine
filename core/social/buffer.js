@@ -111,7 +111,7 @@ function buildMetadata(service, format = "single", title) {
  * @param {"image"|"video"} [args.mediaType="image"]
  * @param {Date} args.scheduledAt - date de publication
  */
-export async function schedulePost(config, { profileId, service, format, text, mediaUrls, imageUrl, mediaType = "image", scheduledAt }) {
+export async function schedulePost(config, { profileId, service, format, text, mediaUrls, imageUrl, mediaType = "image", scheduledAt, schedulingType = "automatic" }) {
   // Back-compat : si imageUrl fourni au lieu de mediaUrls, l'utiliser
   const urls = mediaUrls || (imageUrl ? [imageUrl] : []);
   if (urls.length === 0) {
@@ -122,11 +122,15 @@ export async function schedulePost(config, { profileId, service, format, text, m
   const assets = urls.map((url) =>
     mediaType === "video" ? { video: { url } } : { image: { url } }
   );
+  // schedulingType :
+  //   - "automatic"    : Buffer publie tout seul à l'heure prévue
+  //   - "notification" : Buffer envoie un push sur ton phone, tu finalises dans l'app native
+  //                      (indispensable pour TikTok si tu veux picker un son trending)
   const input = {
     text,
     channelId: profileId,
     dueAt: isoDate,
-    schedulingType: "automatic",
+    schedulingType,
     mode: "customScheduled",
     assets,
   };
