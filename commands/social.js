@@ -92,11 +92,11 @@ async function main() {
   function buildCaptionFor(service) {
     let cta;
     if (service === "facebook") {
-      // FB : URL clickable dans la caption
-      cta = productHandle ? `\n\n👉 ${productUrl}` : `\n\n👉 ${productUrl}`;
+      // FB : URL clickable dans la caption, sans émoji
+      cta = `\n\n→ ${productUrl}`;
     } else {
-      // Insta + TikTok : lien en bio
-      cta = `\n\n👉 Lien en bio`;
+      // Insta + TikTok : lien en bio, sans émoji
+      cta = `\n\n→ Lien en bio.`;
     }
     return `${captionRaw}${cta}\n\n${hashtags.join(" ")}`;
   }

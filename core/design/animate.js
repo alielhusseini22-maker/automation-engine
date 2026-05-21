@@ -74,16 +74,15 @@ export async function animateCarousel({
 
   if (audioPath) {
     // Audio : map depuis input index slideCount (vient après les inputs vidéo).
-    // Fade in/out simple. -shortest coupe la sortie à la durée vidéo.
-    const fadeOutStart = Math.max(0, totalDurationSec - 0.5).toFixed(2);
+    // Pas de filter audio (entre en conflit avec filter_complex côté vidéo).
+    // -t totalDurationSec force la durée de sortie sans ambiguïté.
     args.push(
       "-map", `${slideCount}:a`,
       "-c:a", "aac",
       "-b:a", "192k",
       "-ac", "2",
       "-ar", "44100",
-      "-af", `afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=0.5`,
-      "-shortest"
+      "-t", String(totalDurationSec)
     );
   }
 

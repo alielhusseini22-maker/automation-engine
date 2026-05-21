@@ -56,7 +56,14 @@ async function generateHookCarousel(config, runDir) {
   const product = await pickFeatureProduct(config);
 
   const { data: content } = await claudeJSON(config, {
-    system: `Tu écris un carrousel social éducatif pour Poils Précieux, marque française premium pour chiens & chats. Le but : éduquer + driver vers produit. Ton factuel + bienveillant, jamais survendu, jamais d'invention de client.`,
+    system: `Tu écris un carrousel social éducatif pour Poils Précieux, marque française premium pour chiens & chats. Ton factuel + bienveillant, jamais survendu, jamais d'invention de client.
+
+RÈGLES ABSOLUES — JAMAIS enfreindre :
+- ZÉRO émoji nulle part. Pas dans le hook, pas dans la caption, pas dans les insights. Pas ✨, pas 🐾, pas 🐶, pas 👉, rien. La caption doit pouvoir être lue à voix haute sans accroche visuelle parasite. C'est ce qui fait premium.
+- Pas de "Lien en bio" ni URL dans la caption (le système ajoute le CTA par plateforme).
+- Pas de hashtags inline dans la caption (ils vont dans captionHashtags séparément).
+- Pas de "✨ MAGIQUE ✨", pas d'urgence factice, pas "BESTSELLER", pas "PROMO".
+- Hook ULTRA-COURT : max 5 mots par ligne. Style éditorial magazine, pas pub.`,
     user: `Écris le contenu d'un carrousel Instagram 5 slides éducatif lié à ce produit Poils Précieux :
 
 Produit : ${product.title}
@@ -65,23 +72,25 @@ Description courte : ${product.shortDescription}
 Prix : ${product.price}€
 
 STRUCTURE :
-- Slide 1 (hook) : titre accrocheur en 2 lignes courtes (style "3 erreurs en X / sur ton chien à poils longs"). Sous-titre 5-10 mots.
-- Slides 2-4 : 3 insights factuels (titre court + body 1-2 phrases factuelles). Erreur fréquente, mécanique invisible, ou astuce.
+- Slide 1 (hook) : 2 lignes très courtes, élégantes. Pas de question dans le hook. Statement direct.
+  Exemples qui marchent : "Le brossage devient un rituel." / "Trois erreurs invisibles."
+  Exemples qui marchent PAS : "Et si brosser devenait...?" (trop long, trop "publicité")
+- Slides 2-4 : 3 insights factuels (titre court + body 1-2 phrases). Erreur fréquente, mécanique invisible, ou astuce.
 - Slide 5 : CTA produit (le produit ci-dessus).
 
-IMPORTANT : NE PAS inclure "Lien en bio" ni d'URL dans la caption. Le système ajoute le CTA automatiquement par plateforme (URL sur FB, "Lien en bio" sur Insta/TikTok). Termine plutôt par une question/engagement bait.
+CAPTION DU POST : 60-100 mots max. Première phrase courte et percutante (5-15 mots). Pas d'émoji du tout. Engagement bait à la fin sans émoji.
 
 Return JSON :
 {
-  "hookLine1": "ligne 1 hook 3-6 mots",
-  "hookLine2": "ligne 2 hook (italique) 3-6 mots",
-  "hookSubtext": "10-15 mots qui posent la promesse",
+  "hookLine1": "ligne 1 hook MAX 5 mots, aucun émoji",
+  "hookLine2": "ligne 2 hook (italique) MAX 5 mots, aucun émoji",
+  "hookSubtext": "10-15 mots, statement, aucun émoji",
   "insights": [
-    { "title": "titre slide 2 (5-8 mots)", "body": "1-2 phrases factuelles 15-30 mots" },
+    { "title": "titre slide 2 (5-8 mots, sans émoji)", "body": "1-2 phrases 15-30 mots, sans émoji" },
     { "title": "titre slide 3", "body": "..." },
     { "title": "titre slide 4", "body": "..." }
   ],
-  "captionForPost": "FR caption pour le post (60-120 mots, hook + contenu factuel + engagement bait final). PAS de CTA produit ici, le système l'ajoute.",
+  "captionForPost": "FR caption 60-100 mots SANS aucun émoji. Première phrase courte. Termine par engagement bait sans émoji.",
   "captionHashtags": ["#poilsprecieux", "#poilsprecieuxfr", "..."],
   "altText": "FR alt text 1 phrase"
 }`,
@@ -130,7 +139,13 @@ async function generateTipCard(config, runDir) {
   const product = await pickFeatureProduct(config);
 
   const { data: content } = await claudeJSON(config, {
-    system: `Tu écris une tip card pour Poils Précieux, marque pet française premium. Ton bienveillant + factuel + court.`,
+    system: `Tu écris une tip card pour Poils Précieux, marque pet française premium. Ton bienveillant + factuel + court.
+
+RÈGLES ABSOLUES :
+- ZÉRO émoji partout (pas ✨ pas 🐾 pas 🐶 pas 👉 pas même un seul). La caption doit être éditoriale, lisible sans bruit visuel.
+- Pas de "Lien en bio" ni URL dans la caption (le système l'ajoute).
+- Pas de hashtags inline (ils sont séparés dans captionHashtags).
+- Pas d'urgence factice, pas de "PROMO !", pas de "Bestseller".`,
     user: `Écris une astuce du jour actionnable et concrète, idéalement en lien doux avec ce produit :
 
 Produit : ${product.title}
@@ -191,7 +206,13 @@ async function generateProductHighlight(config, runDir) {
   const product = await pickFeatureProduct(config);
 
   const { data: content } = await claudeJSON(config, {
-    system: `Tu écris la mise en avant d'un produit Poils Précieux. Ton bienveillant, jamais survendu, jamais d'urgence factice.`,
+    system: `Tu écris la mise en avant d'un produit Poils Précieux. Ton bienveillant, jamais survendu, jamais d'urgence factice.
+
+RÈGLES ABSOLUES :
+- ZÉRO émoji partout (pas ✨ pas 🐾 pas 🐶 pas 👉 pas un seul). La caption doit être éditoriale.
+- Pas de "Lien en bio" ni URL dans la caption (le système l'ajoute).
+- Pas de hashtags inline (ils sont dans captionHashtags séparément).
+- benefitLine : MAX 6 mots, élégant, statement (pas une question, pas un superlatif).`,
     user: `Mets en avant ce produit Poils Précieux :
 
 Produit : ${product.title}
