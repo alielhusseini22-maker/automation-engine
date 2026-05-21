@@ -87,10 +87,13 @@
 **Principe absolu** : pas de contenu fictionnel. Les histoires de clients sont attendues jusqu'à avoir des vrais témoignages (UGC). Avant ça, on fait de la pédagogie produit + du contenu émotionnel réel (vrai chien, vrai chat, vrai moment).
 
 **Sources de contenu hiérarchisées** :
-1. **Content queue** (`projects/poils-precieux/content-queue/`) — vidéos / photos réelles que le founder ou son entourage filme
-2. **Shopify products** — vraies photos produits de la boutique pour les jours "produit" et "cas d'usage"
-3. **Pexels stock** — fallback automatique quand queue vide, vraies vidéos d'animaux libres de droit (jamais présenté comme contenu brand)
-4. **AI image éditoriale** — uniquement pour les jours guide/communauté (visuel concept, pas faux animal)
+1. **AI Video Replicate (Luma Ray Flash 2)** — génération cinématographique brand-directed pour les jours Reel (tendresse, behind-scenes, inspiration). Direction artistique stricte : scandinave minimaliste, beige, lumière naturelle, comportement animal réaliste. Voir `core/video/prompts.js` pour la banque de scénarios.
+2. **Shopify products** — vraies photos produits de la boutique pour les jours "produit" et "cas d'usage". Photos elles-mêmes générées par GPT-Image-1 mais validées comme assets brand.
+3. **Pexels stock** — fallback automatique si Replicate fail ou rate-limit. Vraies vidéos libres de droit, jamais présentées comme contenu brand.
+4. **AI image éditoriale** — pour les jours guide/communauté (visuel concept).
+5. **Content queue** (`projects/poils-precieux/content-queue/`) — vidéos / photos réelles si le founder ou son entourage filme. Garde la priorité sur tout le reste si présentes.
+
+**Note sur l'AI video** : les scénarios sont écrits par la marque (banque dans `prompts.js`), pas par l'IA. L'IA exécute la direction artistique. Le résultat doit ressembler à une vidéo téléphone humaine — pas à un asset CGI mou. Toute vidéo qui révèle un "AI tell" (pattes en trop, fourrure qui morphe, yeux brillants, anatomie impossible) doit être rejetée et regénérée. Voir `core/video/prompts.js` section ANTI_AI_TELL.
 
 **Rotation thématique par jour** :
 

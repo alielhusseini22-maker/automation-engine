@@ -36,6 +36,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
           POILS_PRECIEUX_BUFFER_TOKEN: ${{ secrets.POILS_PRECIEUX_BUFFER_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
           PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
         run: |
           node commands/social.js \

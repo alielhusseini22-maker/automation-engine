@@ -27,6 +27,7 @@ import { listQueueItems, pickItemForDay, markConsumed } from "../core/social/que
 import { hasPexelsKey, searchVideos, searchPhotos, pickFreshVideo, pickFreshPhoto, markUsed, pickBestVideoFile, downloadFile, queryForTheme } from "../core/social/pexels.js";
 import { findNewProductToPromote, productPromoBrief } from "../core/social/promo.js";
 import { generateImage } from "../core/images/openai.js";
+import { generateThemedReel } from "../core/video/pipeline.js";
 
 async function selectMediaAndBrief(config, dayTheme, dir, args) {
   const source = dayTheme.source || "ai_or_queue";
@@ -83,8 +84,16 @@ async function selectMediaAndBrief(config, dayTheme, dir, args) {
 }
 
 async function fetchFromPexels(config, dayTheme, dir) {
-  const query = queryForTheme(dayTheme.theme);
   const isVideo = dayTheme.format === "reel";
+
+  // Pour les Reels : on tente d'abord la vraie génération IA cinématographique (Luma Ray Flash 2)
+  if (isVideo) {
+    const reel = await generateThemedReel(config, dir, { theme: dayTheme.theme, species: null, fallbackOk: true });
+    if (reel) return { sourceType: reel.source, ...reel };
+    // Si le pipeline retourne null, on tombe sur le Pexels classique en image dessous
+  }
+
+  const query = queryForTheme(dayTheme.theme);
   console.log(`[social]   ▶ source: pexels (${isVideo ? "video" : "photo"}) query="${query}"`);
 
   if (isVideo) {

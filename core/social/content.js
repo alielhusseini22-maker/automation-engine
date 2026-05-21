@@ -156,6 +156,21 @@ Examples of correct framing:
 DO NOT name a pet, owner, or location. DO NOT pretend this is brand-authored.
 End with a soft observation or question to community.`;
   }
+  if (brief.type === "ai-video") {
+    return `Type: brand-directed AI-generated cinematic video (real-looking pet content, brand-aligned aesthetic)
+Scenario directed: ${brief.scenario}
+Pet species: ${brief.species || "—"}
+Model used: ${brief.model || "Luma Ray Flash 2"}
+Media type: video (9:16 Reel)
+
+CAPTION DIRECTION: This is a brand-directed cinematic moment, not a real customer's pet. Write the caption as a curated brand observation, evocative and emotional. Do NOT name a specific pet ("Nougat", "Marlow", etc) — keep it universal so any viewer can project. Examples of correct framing:
+- "Ce moment de calme qu'on cherche tous pour son cocker."
+- "La routine du soir, version cocker. Cinq minutes, ça change tout."
+- "Quand l'outil est le bon, le brossage devient un rituel apaisant."
+- "Les chats ont ce talent : trouver leur place et ne plus la quitter."
+
+The hook should feel like a moment of recognition (universal, emotional). End with an engagement bait line (question/save/tag).`;
+  }
   if (brief.type === "shopify-product-promo") {
     return `Type: NEW PRODUCT LAUNCH PROMO
 Product: ${brief.title}
