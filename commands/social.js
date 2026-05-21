@@ -159,13 +159,10 @@ async function main() {
       }
       const posts = [];
       for (const p of targets) {
-        // Routing :
-        //   - TikTok : vidéo MP4 (avec musique Pixabay baked-in) + mode notification
-        //              → push sur le phone, tu pickes un son TikTok trending dans l'app si tu veux
-        //   - Insta + FB : carrousel images en mode automatic
+        // Tout en automatic. TikTok reçoit vidéo MP4 avec musique Pixabay baked-in.
+        // Insta + FB reçoivent le carrousel images.
         const isTikTok = p.service === "tiktok";
         const useVideo = isTikTok && videoUrl;
-        const schedulingType = isTikTok ? "notification" : "automatic";
         const bp = await schedulePost(config, {
           profileId: p.id,
           service: p.service,
@@ -174,14 +171,8 @@ async function main() {
           mediaUrls: useVideo ? [videoUrl] : imageUrls,
           mediaType: useVideo ? "video" : "image",
           scheduledAt,
-          schedulingType,
         });
-        posts.push({
-          profile: p.service,
-          type: useVideo ? "video" : "carousel",
-          mode: schedulingType,
-          id: bp?.id || null,
-        });
+        posts.push({ profile: p.service, type: useVideo ? "video" : "carousel", id: bp?.id || null });
       }
       manifest.bufferStatus = "scheduled";
       manifest.bufferPosts = posts;
