@@ -107,7 +107,10 @@ export async function uploadVideoToShopifyFiles(config, { buffer, filename, mime
   // 2. POST binary
   const stagedUrl = await postBinaryToTarget({ target, buffer, mimeType, filename });
 
-  // 3. fileCreate (Shopify ingère + transcode → URL CDN publique)
+  // 3. fileCreate (Shopify ingère + transcode → URL CDN publique).
+  // Note : on omet `filename` car les staged URLs vidéo de Shopify n'ont pas d'extension
+  // dans l'URL → Shopify rejette ("filename extension must match original source").
+  // Shopify dérive le nom automatiquement depuis le contenu.
   const createData = await shopifyQuery(
     config,
     `mutation($files: [FileCreateInput!]!) {
@@ -128,7 +131,6 @@ export async function uploadVideoToShopifyFiles(config, { buffer, filename, mime
       files: [{
         originalSource: stagedUrl,
         contentType: "VIDEO",
-        filename,
         alt: altText,
       }],
     }
