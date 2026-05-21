@@ -157,21 +157,37 @@ async function main() {
         throw new Error(`No Buffer profile matches platforms ${desiredPlatforms.join(",")} (connected: ${profiles.map((p) => p.service).join(", ")})`);
       }
       const posts = [];
+      // Loop résiliente : on essaie chaque plateforme indépendamment
+      // pour qu'un échec sur l'une ne bloque pas les autres + log précis.
       for (const p of targets) {
-        // Tout en automatic. TikTok reçoit vidéo MP4 avec musique Pixabay baked-in.
-        // Insta + FB reçoivent le carrousel images.
         const isTikTok = p.service === "tiktok";
         const useVideo = isTikTok && videoUrl;
-        const bp = await schedulePost(config, {
-          profileId: p.id,
-          service: p.service,
-          format: useVideo ? "reel" : post.format,
-          text: captionFull,
-          mediaUrls: useVideo ? [videoUrl] : imageUrls,
-          mediaType: useVideo ? "video" : "image",
-          scheduledAt,
-        });
-        posts.push({ profile: p.service, type: useVideo ? "video" : "carousel", id: bp?.id || null });
+        try {
+          const bp = await schedulePost(config, {
+            profileId: p.id,
+            service: p.service,
+            format: useVideo ? "reel" : post.format,
+            text: captionFull,
+            mediaUrls: useVideo ? [videoUrl] : imageUrls,
+            mediaType: useVideo ? "video" : "image",
+            scheduledAt,
+          });
+          posts.push({
+            profile: p.service,
+            type: useVideo ? "video" : "carousel",
+            id: bp?.id || null,
+            ok: true,
+          });
+          console.log(`[social]     ✓ ${p.service} (${useVideo ? "video" : "carousel"})`);
+        } catch (err) {
+          console.log(`[social]     ✗ ${p.service} FAILED: ${err.message}`);
+          posts.push({
+            profile: p.service,
+            type: useVideo ? "video" : "carousel",
+            ok: false,
+            error: err.message,
+          });
+        }
       }
       manifest.bufferStatus = "scheduled";
       manifest.bufferPosts = posts;
