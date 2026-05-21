@@ -178,8 +178,16 @@ async function main() {
   const dir = runDir(config, "social");
   const brand = loadBrandCharter(config);
 
+  // En mode manuel : default fallback = "pexels" (qui tente Replicate AI video en premier pour les Reels).
+  // Overridable via --source xxx / --fallback xxx
   const dayTheme = args.theme && args.format
-    ? { dayName: "manual", theme: args.theme, format: args.format, source: args.source || "queue", fallback: "skip" }
+    ? {
+        dayName: "manual",
+        theme: args.theme,
+        format: args.format,
+        source: args.source || "queue",
+        fallback: args.fallback || "pexels",
+      }
     : getDayTheme(config);
 
   console.log(`[social] project=${config.project.id} day=${dayTheme.dayName} theme=${dayTheme.theme} format=${dayTheme.format}`);

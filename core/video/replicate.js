@@ -33,7 +33,7 @@ export async function generateVideo({ prompt, aspectRatio = "9:16", duration = 5
   const input = {
     prompt,
     aspect_ratio: aspectRatio,
-    duration: String(duration),
+    duration: parseInt(duration, 10),
   };
 
   const output = await c.run(model, { input });
