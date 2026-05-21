@@ -30,6 +30,10 @@
       "tiktok": null
     }
   },
+  "aiVideo": {
+    "enabled": false,
+    "_comment": "Désactivé : qualité Hailuo/Ray Flash 2026 insuffisante. Réactiver quand Sora 2 / Veo 3 / Kling v3 atteignent la barre brand. Pexels stock = source primaire en attendant."
+  },
   "sourcing": {
     "rules": {
       "minOrders": 500,

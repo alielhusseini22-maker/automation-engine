@@ -11,8 +11,10 @@ import { searchVideos, pickFreshVideo, markUsed, pickBestVideoFile, downloadFile
  * @returns {{ mediaPath, mediaType, brief, source }}
  */
 export async function generateThemedReel(config, runDir, { theme, species = null, fallbackOk = true }) {
-  // 1. Essai Replicate (Luma Ray Flash 2)
-  if (hasReplicateToken()) {
+  // 1. Essai Replicate (modèle vidéo IA) — seulement si activé dans config + token présent.
+  // Désactivé par défaut : qualité 2026 insuffisante. Réactiver via config.aiVideo.enabled = true.
+  const aiVideoEnabled = config.aiVideo?.enabled === true;
+  if (aiVideoEnabled && hasReplicateToken()) {
     try {
       const promptObj = pickVideoPrompt(theme, species);
       console.log(`[video] generating Reel via Replicate (${promptObj.title}, ${promptObj.duration}s)...`);
@@ -40,6 +42,8 @@ export async function generateThemedReel(config, runDir, { theme, species = null
       console.log(`[video]   ⚠ Replicate failed: ${err.message}`);
       if (!fallbackOk) throw err;
     }
+  } else if (!aiVideoEnabled) {
+    console.log(`[video]   AI video disabled in config — using Pexels stock directly`);
   } else {
     console.log(`[video]   (no REPLICATE_API_TOKEN, falling back to Pexels)`);
   }
