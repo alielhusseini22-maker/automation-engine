@@ -202,44 +202,48 @@ export function queryForTheme(theme, species = null) {
 }
 
 /**
- * Queries Pexels SPÉCIFIQUEMENT orientées catalogue Poils Précieux (brossage, soin, gamelle…).
- * Pour les vidéos "pexels-video" du calendrier social.
+ * Queries Pexels orientées catalogue Poils Précieux : majoritairement TOILETTAGE / BROSSAGE / SOIN
+ * (les catégories de la boutique). Queries FR + EN pour maximiser les bons résultats.
+ *
+ * weight = poids dans le random pick. Brossage / toilettage en gros = 70% des picks,
+ * autres catégories pet care = 30%.
  */
 const BRAND_RELEVANT_QUERIES = [
-  // Brossage / toilettage
-  { query: "dog brushing fur", category: "toilettage", species: "chien" },
-  { query: "person brushing dog", category: "toilettage", species: "chien" },
-  { query: "cat grooming hand", category: "toilettage", species: "chat" },
-  { query: "wooden brush pet", category: "toilettage", species: null },
-  { query: "long hair dog combing", category: "toilettage", species: "chien" },
+  // ── TOILETTAGE / BROSSAGE (priorité haute — 70% du temps) ──
+  { query: "brossage chien", category: "toilettage", species: "chien", weight: 4 },
+  { query: "brushing dog fur", category: "toilettage", species: "chien", weight: 4 },
+  { query: "dog grooming brush", category: "toilettage", species: "chien", weight: 3 },
+  { query: "long hair dog brushing", category: "toilettage", species: "chien", weight: 3 },
+  { query: "toilettage chien", category: "toilettage", species: "chien", weight: 3 },
+  { query: "groomer brushing golden retriever", category: "toilettage", species: "chien", weight: 2 },
+  { query: "cocker spaniel grooming", category: "toilettage", species: "chien", weight: 2 },
 
-  // Cute pet moments brand-aligned
-  { query: "puppy sleeping owner lap", category: "tendresse", species: "chien" },
-  { query: "cat purring close up", category: "tendresse", species: "chat" },
-  { query: "small dog cuddle blanket", category: "tendresse", species: "chien" },
-  { query: "kitten yawning slow", category: "tendresse", species: "chat" },
+  { query: "brossage chat", category: "toilettage", species: "chat", weight: 3 },
+  { query: "cat grooming brush", category: "toilettage", species: "chat", weight: 3 },
+  { query: "brushing cat fur", category: "toilettage", species: "chat", weight: 3 },
+  { query: "toilettage chat", category: "toilettage", species: "chat", weight: 2 },
 
-  // Soin / hygiène
-  { query: "cleaning dog paw towel", category: "hygiene", species: "chien" },
-  { query: "dog bath gentle", category: "hygiene", species: "chien" },
-  { query: "trimming cat nails", category: "hygiene", species: "chat" },
+  // ── HYGIÈNE / SOIN (15%) ──
+  { query: "trimming dog nails", category: "hygiene", species: "chien", weight: 2 },
+  { query: "couper griffes chien", category: "hygiene", species: "chien", weight: 2 },
+  { query: "dog teeth brushing", category: "hygiene", species: "chien", weight: 1 },
+  { query: "cleaning dog paw", category: "hygiene", species: "chien", weight: 2 },
+  { query: "dog bath shower", category: "hygiene", species: "chien", weight: 2 },
+  { query: "cat nail clipping", category: "hygiene", species: "chat", weight: 1 },
 
-  // Alimentation / eau
-  { query: "dog drinking water bowl", category: "alimentation", species: "chien" },
-  { query: "cat eating ceramic bowl", category: "alimentation", species: "chat" },
+  // ── ALIMENTATION / EAU (10%) ──
+  { query: "dog drinking water fountain", category: "alimentation", species: "chien", weight: 1 },
+  { query: "cat water fountain drinking", category: "alimentation", species: "chat", weight: 2 },
+  { query: "dog eating ceramic bowl", category: "alimentation", species: "chien", weight: 1 },
 
-  // Couchage / confort
-  { query: "dog sleeping bed cozy", category: "couchage", species: "chien" },
-  { query: "cat sleeping window sunbeam", category: "couchage", species: "chat" },
-
-  // Bond / complicité
-  { query: "owner hugging dog smile", category: "communaute", species: "chien" },
-  { query: "person petting cat couch", category: "communaute", species: "chat" },
+  // ── COUCHAGE / CONFORT (5%) ──
+  { query: "dog cozy bed sleeping", category: "couchage", species: "chien", weight: 1 },
+  { query: "cat round bed cozy", category: "couchage", species: "chat", weight: 1 },
 ];
 
 /**
- * Pioche une query brand-relevante au hasard, biaisée par species si fournie.
- * @returns { query, category, species }
+ * Pioche une query au hasard pondérée par `weight`.
+ * Toilettage/brossage = ~70% des picks pour rester ancré au catalogue boutique.
  */
 export function pickBrandQuery({ preferSpecies = null } = {}) {
   let pool = BRAND_RELEVANT_QUERIES;
@@ -247,5 +251,12 @@ export function pickBrandQuery({ preferSpecies = null } = {}) {
     const filtered = pool.filter((q) => !q.species || q.species === preferSpecies);
     if (filtered.length > 0) pool = filtered;
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  // Random pondéré par weight
+  const totalWeight = pool.reduce((s, q) => s + (q.weight || 1), 0);
+  let r = Math.random() * totalWeight;
+  for (const q of pool) {
+    r -= q.weight || 1;
+    if (r <= 0) return q;
+  }
+  return pool[pool.length - 1]; // fallback (shouldn't happen)
 }

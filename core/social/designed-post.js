@@ -282,34 +282,52 @@ async function generatePexelsVideo(config, runDir) {
   const queryObj = pickBrandQuery();
   console.log(`[pexels-video] query: "${queryObj.query}" (cat=${queryObj.category}, species=${queryObj.species || "any"})`);
 
-  // 2. Fetch + pick fresh video
-  const videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "portrait" });
-  const video = pickFreshVideo(config, videos);
+  // 2. Try portrait first (best for Reels), fallback to landscape (we'll reformat with pad)
+  let video = null;
+  let isLandscape = false;
+  let videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "portrait" });
+  video = pickFreshVideo(config, videos);
+  if (!video) {
+    console.log(`[pexels-video] no portrait result, fallback to landscape (will reformat 9:16)`);
+    videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "landscape" });
+    video = pickFreshVideo(config, videos);
+    isLandscape = true;
+  }
+  if (!video) {
+    // Last fallback: no orientation filter
+    videos = await searchVideos(queryObj.query, { perPage: 20 });
+    video = pickFreshVideo(config, videos);
+    isLandscape = video && video.width > video.height;
+  }
   if (!video) throw new Error(`No fresh Pexels video for query "${queryObj.query}"`);
+
   const file = pickBestVideoFile(video);
   if (!file) throw new Error("No usable file in Pexels video");
 
   // 3. Download
   const rawPath = path.join(runDir, `pexels-${video.id}-raw.mp4`);
-  console.log(`[pexels-video] downloading from Pexels (${(file.height || 0)}p ${(file.width || 0)}w, ~${Math.round((video.duration || 0))}s)...`);
+  console.log(`[pexels-video] downloading (${(file.height || 0)}p ${(file.width || 0)}w, ~${Math.round((video.duration || 0))}s, ${isLandscape ? "landscape→reformat" : "portrait"})...`);
   await downloadFile(file.link, rawPath);
   markUsed(config, "video", video.id);
 
-  // 4. Overlay music
-  const mood = "warm"; // pexels videos = warm mood vibe
+  // 4. Overlay music + reformat si landscape (recodeVideo: true forçe 1080x1920 vertical)
+  const mood = "warm";
   const audioPath = pickMusicTrack({ mood });
-  if (!audioPath) {
-    console.log(`[pexels-video] ⚠ no music track found, video will be silent`);
-  } else {
-    console.log(`[pexels-video] music: ${path.basename(audioPath)}`);
-  }
+  if (audioPath) console.log(`[pexels-video] music: ${path.basename(audioPath)}`);
+  else console.log(`[pexels-video] ⚠ no music track found, video will be silent`);
+
   const finalPath = path.join(runDir, `pexels-${video.id}.mp4`);
   if (audioPath) {
-    await overlayMusicOnVideo({ videoPath: rawPath, audioPath, outputPath: finalPath });
+    await overlayMusicOnVideo({
+      videoPath: rawPath,
+      audioPath,
+      outputPath: finalPath,
+      recodeVideo: isLandscape, // re-encode + pad si landscape, sinon copy stream
+    });
   } else {
     fs.copyFileSync(rawPath, finalPath);
   }
-  console.log(`[pexels-video] ✓ final MP4 with music ready`);
+  console.log(`[pexels-video] ✓ final MP4 ready`);
 
   // 5. Pick a brand product for context (optional caption hook)
   const product = await pickFeatureProduct(config);

@@ -154,14 +154,25 @@ export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, re
   const args = [
     "-i", videoPath,
     "-stream_loop", "-1", "-i", audioPath,
-    "-map", "0:v:0",
-    "-map", "1:a:0",
   ];
 
+  // Si recodeVideo : on reformate aussi en 1080x1920 vertical (scale + pad beige).
+  // Indispensable pour les Reels TikTok/Insta si la vidéo source est landscape.
   if (recodeVideo) {
-    args.push("-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "20");
+    args.push(
+      "-filter_complex",
+      "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF4EDE3,setsar=1[outv]",
+      "-map", "[outv]",
+      "-map", "1:a:0",
+      "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "20",
+      "-r", "30"
+    );
   } else {
-    args.push("-c:v", "copy");
+    args.push(
+      "-map", "0:v:0",
+      "-map", "1:a:0",
+      "-c:v", "copy"
+    );
   }
 
   args.push(
