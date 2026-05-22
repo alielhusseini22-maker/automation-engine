@@ -114,55 +114,70 @@ async function main() {
     return;
   }
 
-  // Step 2 — upload toutes les slides PNG vers Shopify CDN (pour Insta/FB carousel)
-  console.log(`[social] Step 2/4 — uploading ${post.mediaPaths.length} slide(s) to Shopify CDN`);
-  const imageUrls = await uploadAllSlides(config, post.mediaPaths);
-  for (const u of imageUrls) console.log(`  → ${u}`);
+  // Détection : post de type vidéo (pexels-video) vs post de type image (carousel/tip/product)
+  const isVideoPost = post.mediaType === "video";
 
-  // Step 3 — animer en vidéo MP4 pour TikTok (Ken Burns + musique)
-  // Seulement si TikTok est dans les targets ET ffmpeg disponible
-  let videoUrl = null;
+  // Buffer profiles + targets
   const profiles = hasBufferToken(config) ? await listProfiles(config) : [];
   const desiredPlatforms = config.social?.platforms || [];
   const targets = profiles.filter((p) => desiredPlatforms.includes(p.service));
   const tiktokTarget = targets.find((p) => p.service === "tiktok");
   console.log(`[social] Buffer profiles fetched : ${profiles.map(p => `${p.service}:${p.name || "?"}`).join(", ") || "(none)"}`);
-  console.log(`[social] Desired platforms (config) : ${desiredPlatforms.join(", ")}`);
   console.log(`[social] Final targets after filter : ${targets.map(p => p.service).join(", ") || "(none)"}`);
+  console.log(`[social] Post is ${isVideoPost ? "VIDEO" : "IMAGE-based"} (${post.brief?.templateType || "unknown"})`);
 
-  const ffmpegOk = await ffmpegAvailable();
-  console.log(`[social] ffmpeg available: ${ffmpegOk}, tiktok target: ${!!tiktokTarget}`);
-  if (tiktokTarget && ffmpegOk) {
-    console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
-    try {
-      const mood = moodForContext({ slot, templateType: post.brief.templateType });
-      const audioPath = pickMusicTrack({ mood });
-      console.log(`  music: ${audioPath ? path.basename(audioPath) : "(no track found, silent video)"}`);
-      const animatedPath = path.join(dir, `animated-${Date.now()}.mp4`);
-      await animateCarousel({
-        slidePaths: post.mediaPaths,
-        audioPath,
-        outputPath: animatedPath,
-        slideDurationSec: post.mediaPaths.length >= 5 ? 3 : 4, // carousel 5 slides → 15s, single → 4s
-      });
-      console.log(`  ✓ animated MP4 generated`);
-      // Diagnostic : vérifier que l'audio est bien dans le MP4
-      const audioInfo = await probeAudio(animatedPath);
-      console.log(`  audio probe: ${audioInfo.replace(/\n/g, " | ")}`);
+  let imageUrls = [];
+  let videoUrl = null;
 
-      if (!hasCloudinaryCreds()) {
-        throw new Error("CLOUDINARY_* env vars missing — TikTok video upload requires Cloudinary (Shopify Files refuses vertical Reels).");
-      }
-      console.log(`  uploading to Cloudinary...`);
-      const cloudResult = await cloudinaryUploadVideo(animatedPath);
-      videoUrl = cloudResult.url;
-      console.log(`  → ${videoUrl} (${(cloudResult.bytes / 1024 / 1024).toFixed(1)} MB, ${cloudResult.duration}s)`);
-    } catch (err) {
-      console.log(`  ⚠ Animation failed: ${err.message}`);
-      console.log(`  TikTok will receive the image carousel (sub-optimal but works)`);
+  if (isVideoPost) {
+    // Branche vidéo (pexels-video) : upload direct Cloudinary, toutes les plateformes reçoivent la vidéo
+    console.log(`[social] Step 2/4 — uploading pexels-video to Cloudinary`);
+    if (!hasCloudinaryCreds()) {
+      throw new Error("CLOUDINARY_* env vars missing — video posts require Cloudinary.");
     }
-  } else if (tiktokTarget) {
-    console.log(`[social] Step 3/4 — ffmpeg unavailable, TikTok gets image carousel (sub-optimal)`);
+    const cloudResult = await cloudinaryUploadVideo(post.mediaPaths[0]);
+    videoUrl = cloudResult.url;
+    console.log(`  → ${videoUrl} (${(cloudResult.bytes / 1024 / 1024).toFixed(1)} MB, ${cloudResult.duration}s)`);
+  } else {
+    // Branche image (carousel/tip/product) : upload slides Shopify CDN
+    console.log(`[social] Step 2/4 — uploading ${post.mediaPaths.length} slide(s) to Shopify CDN`);
+    imageUrls = await uploadAllSlides(config, post.mediaPaths);
+    for (const u of imageUrls) console.log(`  → ${u}`);
+
+    // TikTok obtient une vidéo animée (Ken Burns + musique) à partir du carrousel
+    const ffmpegOk = await ffmpegAvailable();
+    console.log(`[social] ffmpeg available: ${ffmpegOk}, tiktok target: ${!!tiktokTarget}`);
+    if (tiktokTarget && ffmpegOk) {
+      console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
+      try {
+        const mood = moodForContext({ slot, templateType: post.brief.templateType });
+        const audioPath = pickMusicTrack({ mood });
+        console.log(`  music: ${audioPath ? path.basename(audioPath) : "(no track found, silent video)"}`);
+        const animatedPath = path.join(dir, `animated-${Date.now()}.mp4`);
+        await animateCarousel({
+          slidePaths: post.mediaPaths,
+          audioPath,
+          outputPath: animatedPath,
+          slideDurationSec: post.mediaPaths.length >= 5 ? 3 : 4,
+        });
+        console.log(`  ✓ animated MP4 generated`);
+        const audioInfo = await probeAudio(animatedPath);
+        console.log(`  audio probe: ${audioInfo.replace(/\n/g, " | ")}`);
+
+        if (!hasCloudinaryCreds()) {
+          throw new Error("CLOUDINARY_* env vars missing — TikTok video upload requires Cloudinary.");
+        }
+        console.log(`  uploading to Cloudinary...`);
+        const cloudResult = await cloudinaryUploadVideo(animatedPath);
+        videoUrl = cloudResult.url;
+        console.log(`  → ${videoUrl} (${(cloudResult.bytes / 1024 / 1024).toFixed(1)} MB, ${cloudResult.duration}s)`);
+      } catch (err) {
+        console.log(`  ⚠ Animation failed: ${err.message}`);
+        console.log(`  TikTok will receive the image carousel (sub-optimal but works)`);
+      }
+    } else if (tiktokTarget) {
+      console.log(`[social] Step 3/4 — ffmpeg unavailable, TikTok gets image carousel (sub-optimal)`);
+    }
   }
 
   // Step 4 — schedule via Buffer (asset différencié par plateforme)
@@ -187,11 +202,14 @@ async function main() {
         throw new Error(`No Buffer profile matches platforms ${desiredPlatforms.join(",")} (connected: ${profiles.map((p) => p.service).join(", ")})`);
       }
       const posts = [];
-      // Loop résiliente : on essaie chaque plateforme indépendamment
-      // pour qu'un échec sur l'une ne bloque pas les autres + log précis.
+      // Loop résiliente : un échec n'arrête pas la suite.
       for (const p of targets) {
+        // Logique :
+        //   - Si isVideoPost (pexels-video) → toutes les plateformes reçoivent la vidéo
+        //   - Sinon (carousel/tip/product) → TikTok reçoit la vidéo animée si dispo,
+        //     Insta + FB reçoivent le carrousel images
         const isTikTok = p.service === "tiktok";
-        const useVideo = isTikTok && videoUrl;
+        const useVideo = isVideoPost || (isTikTok && videoUrl);
         try {
           const captionForThisPlatform = buildCaptionFor(p.service);
           const bp = await schedulePost(config, {

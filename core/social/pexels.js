@@ -200,3 +200,52 @@ export function queryForTheme(theme, species = null) {
   if (candidates.length === 0) candidates = pool;
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
+
+/**
+ * Queries Pexels SPÉCIFIQUEMENT orientées catalogue Poils Précieux (brossage, soin, gamelle…).
+ * Pour les vidéos "pexels-video" du calendrier social.
+ */
+const BRAND_RELEVANT_QUERIES = [
+  // Brossage / toilettage
+  { query: "dog brushing fur", category: "toilettage", species: "chien" },
+  { query: "person brushing dog", category: "toilettage", species: "chien" },
+  { query: "cat grooming hand", category: "toilettage", species: "chat" },
+  { query: "wooden brush pet", category: "toilettage", species: null },
+  { query: "long hair dog combing", category: "toilettage", species: "chien" },
+
+  // Cute pet moments brand-aligned
+  { query: "puppy sleeping owner lap", category: "tendresse", species: "chien" },
+  { query: "cat purring close up", category: "tendresse", species: "chat" },
+  { query: "small dog cuddle blanket", category: "tendresse", species: "chien" },
+  { query: "kitten yawning slow", category: "tendresse", species: "chat" },
+
+  // Soin / hygiène
+  { query: "cleaning dog paw towel", category: "hygiene", species: "chien" },
+  { query: "dog bath gentle", category: "hygiene", species: "chien" },
+  { query: "trimming cat nails", category: "hygiene", species: "chat" },
+
+  // Alimentation / eau
+  { query: "dog drinking water bowl", category: "alimentation", species: "chien" },
+  { query: "cat eating ceramic bowl", category: "alimentation", species: "chat" },
+
+  // Couchage / confort
+  { query: "dog sleeping bed cozy", category: "couchage", species: "chien" },
+  { query: "cat sleeping window sunbeam", category: "couchage", species: "chat" },
+
+  // Bond / complicité
+  { query: "owner hugging dog smile", category: "communaute", species: "chien" },
+  { query: "person petting cat couch", category: "communaute", species: "chat" },
+];
+
+/**
+ * Pioche une query brand-relevante au hasard, biaisée par species si fournie.
+ * @returns { query, category, species }
+ */
+export function pickBrandQuery({ preferSpecies = null } = {}) {
+  let pool = BRAND_RELEVANT_QUERIES;
+  if (preferSpecies) {
+    const filtered = pool.filter((q) => !q.species || q.species === preferSpecies);
+    if (filtered.length > 0) pool = filtered;
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}

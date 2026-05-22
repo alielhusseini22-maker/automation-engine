@@ -137,6 +137,57 @@ export async function animateCarousel({
 }
 
 /**
+ * Overlay une piste audio sur une vidéo existante (Pexels par exemple).
+ * Garde la vidéo intacte (no re-encode), remplace l'audio par la piste musicale.
+ *
+ * @param {object} args
+ * @param {string} args.videoPath - chemin vidéo source (Pexels MP4)
+ * @param {string} args.audioPath - chemin piste musicale (MP3)
+ * @param {string} args.outputPath - sortie MP4
+ * @param {boolean} [args.recodeVideo=false] - si true, ré-encode la vidéo (utile si format pas standard)
+ */
+export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, recodeVideo = false }) {
+  if (!fs.existsSync(path.dirname(outputPath))) {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  }
+
+  const args = [
+    "-i", videoPath,
+    "-stream_loop", "-1", "-i", audioPath,
+    "-map", "0:v:0",
+    "-map", "1:a:0",
+  ];
+
+  if (recodeVideo) {
+    args.push("-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "20");
+  } else {
+    args.push("-c:v", "copy");
+  }
+
+  args.push(
+    "-c:a", "aac",
+    "-b:a", "192k",
+    "-ac", "2",
+    "-ar", "44100",
+    "-shortest",
+    "-movflags", "+faststart",
+    "-y",
+    outputPath
+  );
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", args, { windowsHide: true });
+    let stderr = "";
+    proc.stderr.on("data", (d) => { stderr += d.toString(); });
+    proc.on("error", (err) => reject(new Error(`ffmpeg spawn failed: ${err.message}`)));
+    proc.on("close", (code) => {
+      if (code === 0) resolve(outputPath);
+      else reject(new Error(`ffmpeg exited ${code}. Last stderr:\n${stderr.slice(-1500)}`));
+    });
+  });
+}
+
+/**
  * Vérifie qu'ffmpeg est disponible dans le PATH.
  */
 export async function ffmpegAvailable() {

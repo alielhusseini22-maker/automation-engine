@@ -6,7 +6,12 @@ import { renderCarousel } from "../design/render.js";
 import { buildHookCarousel } from "../design/templates/hook-carousel.js";
 import { buildProductHighlight } from "../design/templates/product-highlight.js";
 import { buildTipCard } from "../design/templates/tip-card.js";
+import path from "node:path";
+import fs from "node:fs";
 import { shopifyQuery } from "../shopify/client.js";
+import { searchVideos, pickFreshVideo, markUsed, pickBestVideoFile, downloadFile, hasPexelsKey, pickBrandQuery } from "./pexels.js";
+import { overlayMusicOnVideo, ffmpegAvailable } from "../design/animate.js";
+import { pickMusicTrack, moodForContext } from "../design/music.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -30,20 +35,26 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
   if (templateType === "product-highlight") {
     return await generateProductHighlight(config, runDir);
   }
+  if (templateType === "pexels-video") {
+    return await generatePexelsVideo(config, runDir);
+  }
   throw new Error(`Unknown template type: ${templateType}`);
 }
 
 function pickTemplate(slot, dayName) {
   if (slot === "evening") return "product-highlight";
-  // Morning : rotation hook/tip selon jour
+  // Morning rotation : 7 jours, 3 formats qui alternent.
+  //   - hook-carousel : éducatif (mon/wed/fri)
+  //   - pexels-video  : émotion + vraie footage (tue/sun)
+  //   - tip-card      : astuce courte (thu/sat)
   const morningRotation = {
     monday: "hook-carousel",
-    tuesday: "tip-card",
+    tuesday: "pexels-video",
     wednesday: "hook-carousel",
     thursday: "tip-card",
     friday: "hook-carousel",
     saturday: "tip-card",
-    sunday: "tip-card",
+    sunday: "pexels-video",
   };
   return morningRotation[dayName] || "tip-card";
 }
@@ -252,6 +263,100 @@ Return JSON.`,
       type: "designed-product",
       templateType: "product-highlight",
       product,
+      content,
+    },
+    content,
+  };
+}
+
+// ───────────────────────────────────────────────────────────
+// Pexels video + musique : footage réel brand-aligned
+// ───────────────────────────────────────────────────────────
+
+async function generatePexelsVideo(config, runDir) {
+  if (!hasPexelsKey()) throw new Error("PEXELS_API_KEY required for pexels-video template");
+  if (!(await ffmpegAvailable())) throw new Error("ffmpeg required for pexels-video template");
+
+  // 1. Pick brand-relevant query
+  const queryObj = pickBrandQuery();
+  console.log(`[pexels-video] query: "${queryObj.query}" (cat=${queryObj.category}, species=${queryObj.species || "any"})`);
+
+  // 2. Fetch + pick fresh video
+  const videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "portrait" });
+  const video = pickFreshVideo(config, videos);
+  if (!video) throw new Error(`No fresh Pexels video for query "${queryObj.query}"`);
+  const file = pickBestVideoFile(video);
+  if (!file) throw new Error("No usable file in Pexels video");
+
+  // 3. Download
+  const rawPath = path.join(runDir, `pexels-${video.id}-raw.mp4`);
+  console.log(`[pexels-video] downloading from Pexels (${(file.height || 0)}p ${(file.width || 0)}w, ~${Math.round((video.duration || 0))}s)...`);
+  await downloadFile(file.link, rawPath);
+  markUsed(config, "video", video.id);
+
+  // 4. Overlay music
+  const mood = "warm"; // pexels videos = warm mood vibe
+  const audioPath = pickMusicTrack({ mood });
+  if (!audioPath) {
+    console.log(`[pexels-video] ⚠ no music track found, video will be silent`);
+  } else {
+    console.log(`[pexels-video] music: ${path.basename(audioPath)}`);
+  }
+  const finalPath = path.join(runDir, `pexels-${video.id}.mp4`);
+  if (audioPath) {
+    await overlayMusicOnVideo({ videoPath: rawPath, audioPath, outputPath: finalPath });
+  } else {
+    fs.copyFileSync(rawPath, finalPath);
+  }
+  console.log(`[pexels-video] ✓ final MP4 with music ready`);
+
+  // 5. Pick a brand product for context (optional caption hook)
+  const product = await pickFeatureProduct(config);
+
+  // 6. Claude caption
+  const { data: content } = await claudeJSON(config, {
+    system: `Tu écris la caption d'un post social pour Poils Précieux. La vidéo est un PLAN STOCK RÉEL (pas tourné par la marque), à présenter comme un moment d'inspiration ou d'observation universelle.
+
+RÈGLES ABSOLUES :
+- ZÉRO émoji (pas ✨ pas 🐾 pas 👉 pas un seul). Caption éditoriale, lisible à voix haute sans accroche visuelle.
+- Ne PAS inventer un nom d'animal, propriétaire, ou histoire client.
+- Ne PAS prétendre que c'est l'animal de la marque ou d'un client.
+- Tu peux frame comme "Ce moment de...", "Quand un chien/chat...", "La routine de...", observation universelle.
+- Mentionne le produit Poils Précieux UNIQUEMENT comme outil utile mentionné en passant, jamais central.
+- Pas de "Lien en bio" ni d'URL (le système ajoute le CTA par plateforme).
+- Pas de hashtags inline (séparés dans captionHashtags).`,
+    user: `La vidéo montre : "${queryObj.query}" — footage stock Pexels, ~${Math.round(video.duration || 5)}s.
+
+Produit Poils Précieux pertinent à évoquer subtilement :
+- ${product.title}
+- ${product.shortDescription.slice(0, 200)}
+- ${product.price}€
+
+Écris la caption (60-100 mots) qui :
+- Démarre par une phrase courte qui plante le moment (statement, pas question)
+- 1-2 phrases qui développent l'observation
+- 1 phrase qui évoque subtilement le produit (sans pitch)
+- Termine par engagement bait (question ouverte sans émoji)
+
+Return JSON :
+{
+  "captionForPost": "FR caption 60-100 mots SANS émoji, SANS 'Lien en bio'",
+  "captionHashtags": ["#poilsprecieux", "#poilsprecieuxfr", "+ 4-5 hashtags FR pet/${queryObj.category}/${queryObj.species || ""}"],
+  "altText": "FR alt text 1 phrase"
+}`,
+    maxTokens: 1200,
+  });
+
+  return {
+    mediaPaths: [finalPath],
+    format: "reel",
+    mediaType: "video",
+    brief: {
+      type: "pexels-video",
+      templateType: "pexels-video",
+      product,
+      pexelsVideo: { id: video.id, query: queryObj.query, category: queryObj.category, species: queryObj.species, durationSec: video.duration, sourceUrl: video.url },
+      music: audioPath ? path.basename(audioPath) : null,
       content,
     },
     content,
