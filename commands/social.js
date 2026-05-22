@@ -16,7 +16,8 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { loadProject, loadBrandCharter, parseArgs, runDir } from "../core/config.js";
-import { uploadImageBuffer, uploadVideoToShopifyFiles } from "../core/shopify/client.js";
+import { uploadImageBuffer } from "../core/shopify/client.js";
+import { uploadVideo as cloudinaryUploadVideo, hasCloudinaryCreds } from "../core/storage/cloudinary.js";
 import { selectHashtags } from "../core/social/themes.js";
 import { hasBufferToken, listProfiles, schedulePost } from "../core/social/buffer.js";
 import { generateDesignedPost } from "../core/social/designed-post.js";
@@ -148,15 +149,14 @@ async function main() {
       // Diagnostic : vérifier que l'audio est bien dans le MP4
       const audioInfo = await probeAudio(animatedPath);
       console.log(`  audio probe: ${audioInfo.replace(/\n/g, " | ")}`);
-      const buf = (await import("node:fs")).readFileSync(animatedPath);
-      console.log(`  uploading + processing video to Shopify Files (this takes 30-60s)...`);
-      videoUrl = await uploadVideoToShopifyFiles(config, {
-        buffer: buf,
-        filename: `social-tiktok-${path.basename(animatedPath)}`,
-        mimeType: "video/mp4",
-        altText: post.content?.altText || "Poils Précieux video",
-      });
-      console.log(`  → ${videoUrl}`);
+
+      if (!hasCloudinaryCreds()) {
+        throw new Error("CLOUDINARY_* env vars missing — TikTok video upload requires Cloudinary (Shopify Files refuses vertical Reels).");
+      }
+      console.log(`  uploading to Cloudinary...`);
+      const cloudResult = await cloudinaryUploadVideo(animatedPath);
+      videoUrl = cloudResult.url;
+      console.log(`  → ${videoUrl} (${(cloudResult.bytes / 1024 / 1024).toFixed(1)} MB, ${cloudResult.duration}s)`);
     } catch (err) {
       console.log(`  ⚠ Animation failed: ${err.message}`);
       console.log(`  TikTok will receive the image carousel (sub-optimal but works)`);

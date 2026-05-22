@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
+    "cloudinary": "^2.10.0",
     "csv-stringify": "^6.6.0",
     "dotenv": "^16.4.7",
     "openai": "^4.85.0",
