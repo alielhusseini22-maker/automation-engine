@@ -32,8 +32,10 @@ export async function uploadVideo(filePath, folder = "poils-precieux/social") {
   ensureConfigured();
   if (!fs.existsSync(filePath)) throw new Error(`Video file not found: ${filePath}`);
 
+  // upload_large = chunked upload, supporte fichiers > 10 MB
+  // (upload_stream classique a une limite de 10MB sur le tier gratuit Cloudinary)
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(
+    cloudinary.uploader.upload_large(
       filePath,
       {
         resource_type: "video",
@@ -41,9 +43,10 @@ export async function uploadVideo(filePath, folder = "poils-precieux/social") {
         use_filename: true,
         unique_filename: true,
         overwrite: false,
+        chunk_size: 6 * 1024 * 1024, // 6 MB chunks
       },
       (error, result) => {
-        if (error) return reject(new Error(`Cloudinary upload error: ${error.message}`));
+        if (error) return reject(new Error(`Cloudinary upload error: ${error.message || JSON.stringify(error)}`));
         if (!result?.secure_url) return reject(new Error("Cloudinary returned no secure_url"));
         resolve({
           url: result.secure_url,

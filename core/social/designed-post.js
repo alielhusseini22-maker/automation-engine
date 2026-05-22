@@ -42,21 +42,11 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
 }
 
 function pickTemplate(slot, dayName) {
+  // Evening : toujours product-highlight (drive ventes)
   if (slot === "evening") return "product-highlight";
-  // Morning rotation : 7 jours, 3 formats qui alternent.
-  //   - hook-carousel : éducatif (mon/wed/fri)
-  //   - pexels-video  : émotion + vraie footage (tue/sun)
-  //   - tip-card      : astuce courte (thu/sat)
-  const morningRotation = {
-    monday: "hook-carousel",
-    tuesday: "pexels-video",
-    wednesday: "hook-carousel",
-    thursday: "tip-card",
-    friday: "hook-carousel",
-    saturday: "tip-card",
-    sunday: "pexels-video",
-  };
-  return morningRotation[dayName] || "tip-card";
+  // Morning : tous les jours = pexels-video (vraie footage + musique, brand-relevant)
+  // Variété assurée par les 18 queries différentes (brossage, cute, hygiène, etc.)
+  return "pexels-video";
 }
 
 // ───────────────────────────────────────────────────────────
