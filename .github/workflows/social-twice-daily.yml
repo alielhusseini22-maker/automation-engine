@@ -57,6 +57,9 @@ jobs:
           POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
           POILS_PRECIEUX_BUFFER_TOKEN: ${{ secrets.POILS_PRECIEUX_BUFFER_TOKEN }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
           PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
         run: |
           node commands/social.js \
