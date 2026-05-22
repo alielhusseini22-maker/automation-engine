@@ -6,7 +6,6 @@ import { renderCarousel } from "../design/render.js";
 import { buildHookCarousel } from "../design/templates/hook-carousel.js";
 import { buildProductHighlight } from "../design/templates/product-highlight.js";
 import { buildTipCard } from "../design/templates/tip-card.js";
-import path from "node:path";
 import fs from "node:fs";
 import { shopifyQuery } from "../shopify/client.js";
 import { searchVideos, pickFreshVideo, markUsed, pickBestVideoFile, downloadFile, hasPexelsKey, pickBrandQuery } from "./pexels.js";
@@ -42,11 +41,23 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
 }
 
 function pickTemplate(slot, dayName) {
-  // Evening : toujours product-highlight (drive ventes)
+  // 3 slots/jour :
+  //   - morning (10h)  : éducatif designed (hook-carousel OU tip-card alterné)
+  //   - midday (14h)   : pexels-video (vraie footage + musique, émotion)
+  //   - evening (19h)  : product-highlight (drive ventes)
+  if (slot === "midday") return "pexels-video";
   if (slot === "evening") return "product-highlight";
-  // Morning : tous les jours = pexels-video (vraie footage + musique, brand-relevant)
-  // Variété assurée par les 18 queries différentes (brossage, cute, hygiène, etc.)
-  return "pexels-video";
+  // Morning : alternance hook-carousel (mon/wed/fri) / tip-card (autres jours)
+  const morningRotation = {
+    monday: "hook-carousel",
+    tuesday: "tip-card",
+    wednesday: "hook-carousel",
+    thursday: "tip-card",
+    friday: "hook-carousel",
+    saturday: "tip-card",
+    sunday: "hook-carousel",
+  };
+  return morningRotation[dayName] || "tip-card";
 }
 
 // ───────────────────────────────────────────────────────────

@@ -29,14 +29,17 @@ const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "frid
 
 function detectSlot(date = new Date()) {
   const h = date.getHours();
-  if (h < 14) return "morning";
-  return "evening";
+  if (h < 12) return "morning";   // before 12h → morning (10h schedule)
+  if (h < 16) return "midday";    // 12-16h → midday (14h schedule)
+  return "evening";                // 16h+ → evening (19h schedule)
 }
 
 function scheduleTimeForSlot(slot, baseDate = new Date()) {
   const target = new Date(baseDate);
   if (slot === "morning") {
     target.setHours(10, 0, 0, 0);
+  } else if (slot === "midday") {
+    target.setHours(14, 0, 0, 0);
   } else {
     target.setHours(19, 0, 0, 0);
   }
