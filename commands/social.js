@@ -89,7 +89,8 @@ async function main() {
     : selectHashtags(config, { count: 7 });
 
   // CTA différencié par plateforme construit plus tard, juste avant schedulePost.
-  const productHandle = post.brief?.product?.handle || null;
+  // Montage : le produit mis en avant est celui de la carte de fin (outroProduct).
+  const productHandle = post.brief?.product?.handle || post.brief?.outroProduct?.handle || null;
   const productUrl = productHandle
     ? `https://${config.project.domain}/products/${productHandle}`
     : `https://${config.project.domain}`;
@@ -264,11 +265,17 @@ async function main() {
 
   // Mémoire anti-doublon (vidéo + produit + musique + concept) — commitée par le workflow CI.
   try {
+    // Montage : enregistre TOUS les clips utilisés (sinon ils pourraient se répéter d'un run à l'autre).
+    const montageClipIds = Array.isArray(post.brief?.clipIds) ? post.brief.clipIds : [];
+    for (const cid of montageClipIds) {
+      recordSocialUsage(config, { videoId: cid });
+    }
     recordSocialUsage(config, {
       videoId: post.brief?.pexelsVideo?.id || null,
-      productHandle: post.brief?.product?.handle || null,
+      productHandle: post.brief?.product?.handle || post.brief?.outroProduct?.handle || null,
       music: usedMusic,
-      concept: post.brief?.templateType || null,
+      // montage → brief.concept (emotion|astuce|relatable) ; designed posts → templateType
+      concept: post.brief?.concept || post.brief?.templateType || null,
     });
     console.log(`[social] historique mis à jour (social-history.json)`);
   } catch (err) {

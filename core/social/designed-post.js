@@ -13,6 +13,7 @@ import { overlayMusicOnVideo, ffmpegAvailable } from "../design/animate.js";
 import { pickMusicTrack, moodForContext } from "../design/music.js";
 import { loadWeeklyPlan } from "../strategy/weekly-plan.js";
 import { recentVideoIds, recentProducts, recentMusic } from "./history.js";
+import { generateMontageVideo } from "./montage.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -39,15 +40,25 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
   if (templateType === "pexels-video") {
     return await generatePexelsVideo(config, runDir);
   }
+  if (templateType === "montage") {
+    // Montage multi-clips branded (concept émotion/astuce/relatable) + carte produit de fin.
+    // Fallback résilient vers pexels-video si le montage échoue (ex: <2 clips frais trouvés).
+    try {
+      return await generateMontageVideo(config, runDir, {});
+    } catch (err) {
+      console.log(`[design] ⚠ montage failed (${err.message}) → fallback pexels-video`);
+      return await generatePexelsVideo(config, runDir);
+    }
+  }
   throw new Error(`Unknown template type: ${templateType}`);
 }
 
 function pickTemplate(slot, dayName) {
   // 3 slots/jour :
   //   - morning (10h)  : éducatif designed (hook-carousel OU tip-card alterné)
-  //   - midday (14h)   : pexels-video (vraie footage + musique, émotion)
+  //   - midday (14h)   : montage multi-clips branded (concept varié) + carte produit de fin
   //   - evening (19h)  : product-highlight (drive ventes)
-  if (slot === "midday") return "pexels-video";
+  if (slot === "midday") return "montage";
   if (slot === "evening") return "product-highlight";
   // Morning : alternance hook-carousel (mon/wed/fri) / tip-card (autres jours)
   const morningRotation = {
