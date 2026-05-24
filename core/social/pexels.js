@@ -92,9 +92,10 @@ function scorePhoto(photo) {
 /**
  * Sélection robuste : top scored + non déjà utilisé.
  */
-export function pickFreshVideo(config, videos) {
+export function pickFreshVideo(config, videos, usedIds = null) {
   if (!videos?.length) return null;
-  const used = loadUsedIds(config);
+  // usedIds = Set persistant ("v-<id>") fourni par l'historique social ; fallback ancien cache local.
+  const used = usedIds instanceof Set ? usedIds : loadUsedIds(config);
   const fresh = videos.filter((v) => !used.has(`v-${v.id}`));
   const ranked = (fresh.length ? fresh : videos).sort((a, b) => scoreVideo(b) - scoreVideo(a));
   return ranked[0] || null;

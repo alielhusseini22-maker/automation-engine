@@ -24,6 +24,7 @@ import { generateDesignedPost } from "../core/social/designed-post.js";
 import { closeBrowser } from "../core/design/render.js";
 import { animateCarousel, ffmpegAvailable, probeAudio } from "../core/design/animate.js";
 import { pickMusicTrack, moodForContext } from "../core/design/music.js";
+import { recordSocialUsage, recentMusic } from "../core/social/history.js";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -117,6 +118,9 @@ async function main() {
     return;
   }
 
+  // Musique réellement utilisée (pour l'historique anti-répétition). Pexels-video la fixe déjà.
+  let usedMusic = post.brief?.music || null;
+
   // Détection : post de type vidéo (pexels-video) vs post de type image (carousel/tip/product)
   const isVideoPost = post.mediaType === "video";
 
@@ -154,7 +158,8 @@ async function main() {
       console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
       try {
         const mood = moodForContext({ slot, templateType: post.brief.templateType });
-        const audioPath = pickMusicTrack({ mood });
+        const audioPath = pickMusicTrack({ mood, exclude: recentMusic(config) });
+        if (audioPath) usedMusic = path.basename(audioPath);
         console.log(`  music: ${audioPath ? path.basename(audioPath) : "(no track found, silent video)"}`);
         const animatedPath = path.join(dir, `animated-${Date.now()}.mp4`);
         await animateCarousel({
@@ -256,6 +261,20 @@ async function main() {
 
   fs.writeFileSync(path.join(dir, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
   console.log(`\n[social] ✓ done — manifest: ${path.join(dir, "manifest.json")}`);
+
+  // Mémoire anti-doublon (vidéo + produit + musique + concept) — commitée par le workflow CI.
+  try {
+    recordSocialUsage(config, {
+      videoId: post.brief?.pexelsVideo?.id || null,
+      productHandle: post.brief?.product?.handle || null,
+      music: usedMusic,
+      concept: post.brief?.templateType || null,
+    });
+    console.log(`[social] historique mis à jour (social-history.json)`);
+  } catch (err) {
+    console.log(`[social] ⚠ historique non enregistré : ${err.message}`);
+  }
+
   await closeBrowser();
 }
 

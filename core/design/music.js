@@ -32,15 +32,26 @@ export function listMusicTracks() {
  *   - "upbeat"   → hook carousel (slot morning) — mais sans casser le calme brand
  *   - "intimate" → behind-scenes, tendresse
  */
-export function pickMusicTrack({ mood = null } = {}) {
+export function pickMusicTrack({ mood = null, exclude = null } = {}) {
   const all = listMusicTracks();
   if (all.length === 0) return null;
 
+  const ex = exclude instanceof Set ? exclude : new Set(exclude || []);
+  // Évite les pistes récentes ; si tout est "récent", on autorise quand même (pas de blocage).
+  const notRecent = (list) => {
+    const fresh = list.filter((p) => !ex.has(path.basename(p)));
+    return fresh.length ? fresh : list;
+  };
+
   if (mood) {
     const matched = all.filter((p) => path.basename(p).toLowerCase().startsWith(`${mood.toLowerCase()}-`));
-    if (matched.length > 0) return matched[Math.floor(Math.random() * matched.length)];
+    if (matched.length > 0) {
+      const pool = notRecent(matched);
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
   }
-  return all[Math.floor(Math.random() * all.length)];
+  const pool = notRecent(all);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /**

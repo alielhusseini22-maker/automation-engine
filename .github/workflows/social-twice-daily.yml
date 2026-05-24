@@ -22,6 +22,8 @@ jobs:
   social:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +71,20 @@ jobs:
           node commands/social.js \
             --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
             --slot "${{ steps.slot.outputs.value }}"
+
+      - name: Persist anti-duplicate history
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add projects/poils-precieux/social-history.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "no social-history change to commit"
+          else
+            git commit -m "chore(social): update anti-duplicate history [skip ci]"
+            git pull --rebase --autostash origin master || true
+            git push origin HEAD:master || echo "push failed (will retry next run)"
+          fi
 
       - name: Upload preview slides as artifact
         if: always()

@@ -12,6 +12,7 @@ import { searchVideos, pickFreshVideo, markUsed, pickBestVideoFile, downloadFile
 import { overlayMusicOnVideo, ffmpegAvailable } from "../design/animate.js";
 import { pickMusicTrack, moodForContext } from "../design/music.js";
 import { loadWeeklyPlan } from "../strategy/weekly-plan.js";
+import { recentVideoIds, recentProducts, recentMusic } from "./history.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -294,20 +295,22 @@ async function generatePexelsVideo(config, runDir) {
   console.log(`[pexels-video] query: "${queryObj.query}" (cat=${queryObj.category}, species=${queryObj.species || "any"})`);
 
   // 2. Try portrait first (best for Reels), fallback to landscape (we'll reformat with pad)
+  // usedIds = mémoire persistante (anti-doublon qui survit aux runs CI)
+  const usedIds = recentVideoIds(config);
   let video = null;
   let isLandscape = false;
   let videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "portrait" });
-  video = pickFreshVideo(config, videos);
+  video = pickFreshVideo(config, videos, usedIds);
   if (!video) {
     console.log(`[pexels-video] no portrait result, fallback to landscape (will reformat 9:16)`);
     videos = await searchVideos(queryObj.query, { perPage: 20, orientation: "landscape" });
-    video = pickFreshVideo(config, videos);
+    video = pickFreshVideo(config, videos, usedIds);
     isLandscape = true;
   }
   if (!video) {
     // Last fallback: no orientation filter
     videos = await searchVideos(queryObj.query, { perPage: 20 });
-    video = pickFreshVideo(config, videos);
+    video = pickFreshVideo(config, videos, usedIds);
     isLandscape = video && video.width > video.height;
   }
   if (!video) throw new Error(`No fresh Pexels video for query "${queryObj.query}"`);
@@ -323,7 +326,7 @@ async function generatePexelsVideo(config, runDir) {
 
   // 4. Overlay music + reformat si landscape (recodeVideo: true forçe 1080x1920 vertical)
   const mood = "warm";
-  const audioPath = pickMusicTrack({ mood });
+  const audioPath = pickMusicTrack({ mood, exclude: recentMusic(config) });
   if (audioPath) console.log(`[pexels-video] music: ${path.basename(audioPath)}`);
   else console.log(`[pexels-video] ⚠ no music track found, video will be silent`);
 
@@ -424,9 +427,13 @@ async function pickFeatureProduct(config) {
     }
   }
 
-  // Rotation : varie selon la date (jour ISO de l'année) dans le pool retenu
+  // Anti-répétition : écarte les produits featurés récemment (mémoire persistante).
+  const recent = recentProducts(config);
+  const avail = pool.filter((p) => !recent.has(p.handle));
+  const finalPool = avail.length ? avail : pool;
+  // Rotation par date dans le pool restant
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const pick = pool[dayOfYear % pool.length];
+  const pick = finalPool[dayOfYear % finalPool.length];
 
   return {
     id: pick.id,
