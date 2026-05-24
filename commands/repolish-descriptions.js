@@ -28,6 +28,7 @@ function parseArgv() {
     all: a.includes("--all"),
     limit: get("--limit") ? Number(get("--limit")) : null,
     handle: get("--handle"),
+    only: get("--only"), // liste de handles séparés par virgule (ignore le marqueur)
   };
 }
 
@@ -55,8 +56,13 @@ async function main() {
   const all = await fetchAllActive(config);
 
   let targets = all.filter((p) => p.publishedAt);
-  if (!args.all) targets = targets.filter((p) => !(p.descriptionHtml || "").includes(MARKER));
-  if (args.handle) targets = targets.filter((p) => p.handle === args.handle);
+  if (args.only) {
+    const set = new Set(args.only.split(",").map((s) => s.trim()).filter(Boolean));
+    targets = targets.filter((p) => set.has(p.handle));
+  } else {
+    if (!args.all) targets = targets.filter((p) => !(p.descriptionHtml || "").includes(MARKER));
+    if (args.handle) targets = targets.filter((p) => p.handle === args.handle);
+  }
   if (args.limit) targets = targets.slice(0, args.limit);
 
   console.log(`[repolish] ${targets.length} fiche(s) à reformater au gabarit${args.dryRun ? " (DRY-RUN)" : ""}`);

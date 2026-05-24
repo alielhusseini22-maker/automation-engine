@@ -209,6 +209,7 @@ Ton rôle : transformer une fiche BRUTE importée d'AliExpress (titre en anglais
 Règles absolues :
 - Aucun emoji.
 - Français impeccable, ton premium et sobre, orienté bénéfice client.
+- STYLE HUMAIN, jamais « généré par IA » : bannis les clichés et tics d'IA (« transforme votre X en Y », « dites adieu à », « fini les », « en un seul geste », « véritable », « que demander de plus », tirets cadratins à répétition). Varie le rythme des phrases, privilégie le concret (situations vécues, détails spécifiques ; aucun chiffre de performance inventé) et glisse un aparté complice. Pas de symétrie robotique.
 - Description HONNÊTE et PRÉCISE sur le fonctionnement RÉEL du produit : explique concrètement comment il marche et à quoi il sert, sans promesse fausse ni superlatif creux.
 - COMPOSITION EXACTE : indique clairement ce que le client reçoit (nombre et nature des pièces, ex: "4 pièces : 1 ciseau droit, 1 ciseau courbé, 1 ciseau à effiler, 1 peigne") et les caractéristiques concrètes (matière, dimensions, capacité) UNIQUEMENT d'après les données fournies. N'invente AUCUNE caractéristique ni mesure.
 - ATTENTION accessoires non inclus : les visuels marketing montrent souvent un étui, un support ou des accessoires qui NE SONT PAS fournis. Ne mentionne JAMAIS un accessoire qui n'est pas explicitement listé dans le titre ou les specs brutes.
@@ -238,7 +239,7 @@ Réponds en JSON strict :
 Consignes :
 - title : format "[nature + bénéfice] — [Mascotte]™" (ex: "Douchette de bain pour chien avec brosse silicone — Rinso™").
 - mascot : 4-6 lettres, mignon, FR/EN, finissant par -y ou -o, distinctif.
-- descriptionHtml : un paragraphe d'accroche (problème vécu → solution concrète), puis la COMPOSITION/CONTENU EXACT quand c'est pertinent (ex: "<strong>Contenu : 4 pièces en acier inoxydable</strong>" + la liste), puis 3 à 5 puces de bénéfices ET caractéristiques précis et véridiques (matière, dimensions/capacité si connues). Jamais d'accessoire non confirmé (étui, support...).
+- descriptionHtml : suis le GABARIT MAISON exact, dans l'ordre, avec ces sections h3 : <p>accroche (problème vécu, concret)</p> · <h3>Mascotte™ : bénéfice clé</h3><p>fonctionnement et matière réels</p> · <h3>Pour qui ?</h3><ul>3 profils</ul> · <h3>Dimensions | Contenu | Caractéristiques</h3><ul>specs/contenu réels ; si plusieurs variantes/packs, précise ce que contient chaque option</ul> · <h3>Le bon geste</h3><p>usage et entretien</p> · <h3>Garanties Poils Précieux</h3><ul>3 FAITS produit vérifiables en « ✓ » puis « ✓ Livraison France 5-9 jours ouvrés — retours 30 jours »</ul>. Jamais d'accessoire non confirmé (étui, support...). Écris-le naturellement, pas de façon mécanique.
 - category : une seule parmi chien, chat, toilettage, alimentation, couchage, balade, jeu.
 - collections : 1 à 3 parmi les collections disponibles ci-dessus. TOUJOURS l'audience (Pour chien et/ou Pour chat) + la collection fonctionnelle correspondante.
 - priceEUR : prix de vente UNIQUE (appliqué à toutes les variantes), aligné sur le PRIX DU MARCHÉ FRANÇAIS pour ce type de produit. Marge MODESTE : la marque est nouvelle et inconnue, donc rester compétitif et ne PAS être gourmand. Plancher : au moins 2× le coût d'achat le plus élevé (${costMax != null ? `soit ≥ ${(costMax * 2).toFixed(2)}€` : "viabilité pub"}). Terminaison en .90 (ex: 14.90, 24.90).
@@ -263,9 +264,17 @@ export async function generateTemplateDescription(config, product) {
     .slice(0, 30)
     .join(" | ");
 
-  const system = `Tu es responsable des fiches produit de Poils Précieux, boutique e-commerce française premium et minimaliste d'accessoires pour chiens et chats.
+  const system = `Tu es le copywriter de Poils Précieux, boutique e-commerce française premium et minimaliste d'accessoires pour chiens et chats. Tu écris comme un vrai passionné d'animaux qui connaît le quotidien des maîtres.
 Tu RÉÉCRIS la description d'un produit existant dans le GABARIT MAISON exact, pour une cohérence parfaite du catalogue.
-Règles : utilise UNIQUEMENT les informations fournies (titre + infos actuelles + variantes) ; n'invente AUCUNE spec, mesure, matière ou garantie produit non déductible. Aucun emoji (le caractère ✓ est autorisé dans les garanties). Français premium, honnête, orienté bénéfice. Ne mentionne jamais un accessoire non confirmé (étui, support...).`;
+
+STYLE — LE PLUS IMPORTANT : ça doit sonner HUMAIN, jamais « généré par IA ».
+- Bannis les tics d'IA et clichés marketing : « transforme votre X en Y », « dites adieu à », « fini les », « en un seul geste », « véritable », « que demander de plus », « il n'aura jamais été aussi simple », les superlatifs creux, et les tirets cadratins à répétition.
+- Varie le rythme : mêle phrases courtes et percutantes et phrases plus longues. Pas de structure répétitive.
+- Concret avant tout : situations vécues et détails spécifiques plutôt que du générique. Mais AUCUN chiffre de performance inventé (« 80 % de poils en moins », « 2× plus rapide », « -50 % »...) — n'utilise QUE des chiffres réellement présents dans les infos fournies.
+- Glisse un aparté complice, comme une marque qui parle vraiment à des maîtres d'animaux (ton chaleureux, un brin d'humour discret quand c'est naturel).
+- Pas de symétrie robotique : les puces peuvent avoir des longueurs différentes.
+
+Règles dures : utilise UNIQUEMENT les informations fournies (titre + infos actuelles + variantes) ; n'invente AUCUNE spec, mesure, matière ou garantie produit non déductible. Aucun emoji (le caractère ✓ est autorisé dans les garanties). Ne mentionne jamais un accessoire non confirmé (étui, support...).`;
 
   const user = `Réécris cette fiche dans le gabarit Poils Précieux.
 
