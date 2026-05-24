@@ -48,22 +48,62 @@ After completing your research with web_search, your FINAL output must be a sing
     maxTokens,
     maxSearches,
   });
-  // Strip any markdown fences if present, then find the first JSON token
-  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  // Find first { or [ to start parsing
-  const firstBrace = Math.min(
-    ...["[", "{"].map((c) => {
-      const i = cleaned.indexOf(c);
-      return i === -1 ? Infinity : i;
-    })
-  );
-  if (firstBrace === Infinity) {
-    throw new Error(`Claude research output has no JSON. First 400 chars:\n${cleaned.slice(0, 400)}`);
+  const data = extractJSON(text);
+  if (data === undefined) {
+    throw new Error(`Claude research output has no parseable JSON. Last 500 chars:\n${text.slice(-500)}`);
   }
-  const jsonText = cleaned.slice(firstBrace);
-  try {
-    return { data: JSON.parse(jsonText), citations, usage };
-  } catch (err) {
-    throw new Error(`Invalid JSON from research:\n${jsonText.slice(0, 400)}\n\n${err.message}`);
+  return { data, citations, usage };
+}
+
+/**
+ * Extraction JSON robuste : Claude peut mêler du raisonnement et le JSON final.
+ * Stratégie : 1) bloc ```json fencé, 2) sinon, scan de tous les blocs balancés [..]/{..}
+ * et on retient le plus grand qui parse (= le vrai output final).
+ */
+export function extractJSON(text) {
+  const candidates = [];
+
+  // 1. Blocs fencés ```json ... ```
+  const fenceRe = /```(?:json)?\s*([\s\S]*?)```/gi;
+  let fm;
+  while ((fm = fenceRe.exec(text)) !== null) candidates.push(fm[1].trim());
+
+  // 2. Tous les blocs balancés [...] et {...} dans le texte brut
+  for (const open of ["[", "{"]) {
+    const close = open === "[" ? "]" : "}";
+    let depth = 0;
+    let start = -1;
+    let inStr = false;
+    let esc = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === "\\") esc = true;
+        else if (ch === '"') inStr = false;
+        continue;
+      }
+      if (ch === '"') { inStr = true; continue; }
+      if (ch === open) { if (depth === 0) start = i; depth++; }
+      else if (ch === close) {
+        depth--;
+        if (depth === 0 && start !== -1) {
+          candidates.push(text.slice(start, i + 1));
+          start = -1;
+        }
+      }
+    }
   }
+
+  // Parse tous les candidats, garde le plus "gros" (plus de contenu = output final)
+  let best;
+  let bestSize = -1;
+  for (const c of candidates) {
+    try {
+      const parsed = JSON.parse(c);
+      const size = Array.isArray(parsed) ? parsed.length * 1000 + c.length : c.length;
+      if (size > bestSize) { best = parsed; bestSize = size; }
+    } catch { /* skip invalid */ }
+  }
+  return best;
 }

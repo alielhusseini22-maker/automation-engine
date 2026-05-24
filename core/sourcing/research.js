@@ -2,6 +2,25 @@
 // Output : candidats structurés prêts pour filterAndRank().
 
 import { researchJSON } from "../claude/research.js";
+import { shopifyQuery } from "../shopify/client.js";
+
+/**
+ * Récupère le catalogue actif (titres + types) pour exclure les doublons du sourcing.
+ */
+export async function fetchExistingCatalog(config) {
+  const data = await shopifyQuery(
+    config,
+    `query {
+      products(first: 100, query: "status:active") {
+        nodes { title productType tags }
+      }
+    }`
+  );
+  return data.products.nodes.map((p) => ({
+    title: p.title,
+    type: p.productType,
+  }));
+}
 
 /**
  * Sélectionne le focus de la semaine selon le calendrier rotation.
@@ -34,9 +53,18 @@ export async function generateCandidates(config, { focus = null, count = 15 } = 
   const usedFocus = focus || getWeeklyFocus(config) || "general";
   const rules = config.sourcing.rules;
 
+  // Catalogue existant → exclusion des doublons
+  let existing = [];
+  try {
+    existing = await fetchExistingCatalog(config);
+  } catch (err) {
+    console.log(`[sourcing] ⚠ couldn't fetch catalog for dedup: ${err.message}`);
+  }
+  const existingList = existing.map((p) => `- ${p.title}${p.type ? ` (${p.type})` : ""}`).join("\n");
+
   const system = `You are a product sourcing analyst for a French premium pet products dropshipping brand called "Poils Précieux" (poilsprecieux.com).
 
-Your job: research AliExpress for trending, high-quality pet products that match the brand's positioning.
+Your job: research AliExpress for trending, high-quality pet products that match the brand's positioning AND that are NOT already in the catalog.
 
 Brand positioning:
 - French market, premium minimal aesthetic
@@ -52,11 +80,18 @@ Hard rules (must all be met):
 - Suitable for shipping to France
 - Not requiring subscription (no food/meds)
 
-Use web_search to find current trending products on AliExpress, dropshipping research sites, or pet industry trend sources. Then synthesize ${count} qualified candidates.`;
+CRITICAL — NO DUPLICATES: The brand ALREADY SELLS these products. You must NOT propose anything that is the same product type or serves the same function. Propose only genuinely NEW products that fill gaps in the catalog.
 
-  const user = `Find ${count} trending pet products on AliExpress that match our criteria.
+PRODUITS DÉJÀ EN CATALOGUE (à NE PAS reproposer, ni équivalent fonctionnel) :
+${existingList || "(catalogue vide)"}
+
+Use web_search to find current trending products on AliExpress, dropshipping research sites, or pet industry trend sources. Then synthesize ${count} qualified candidates that are NEW (not in the list above).`;
+
+  const user = `Find ${count} trending pet products on AliExpress that match our criteria AND are NOT already in our catalog (see the exclusion list in the system prompt).
 
 This week's focus: **${usedFocus}** (prioritize this category, but include 2-3 wildcards from other categories if very strong).
+
+For EACH candidate, double-check it is NOT functionally equivalent to anything in our existing catalog. If the focus category is saturated in our catalog, pick adjacent gaps (new use cases, new product types we don't have yet).
 
 For each candidate, return:
 - title: short descriptive French title (will become product title after polish)
