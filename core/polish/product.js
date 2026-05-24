@@ -210,6 +210,8 @@ Règles absolues :
 - Aucun emoji.
 - Français impeccable, ton premium et sobre, orienté bénéfice client.
 - Description HONNÊTE et PRÉCISE sur le fonctionnement RÉEL du produit : explique concrètement comment il marche et à quoi il sert, sans promesse fausse ni superlatif creux.
+- COMPOSITION EXACTE : indique clairement ce que le client reçoit (nombre et nature des pièces, ex: "4 pièces : 1 ciseau droit, 1 ciseau courbé, 1 ciseau à effiler, 1 peigne") et les caractéristiques concrètes (matière, dimensions, capacité) UNIQUEMENT d'après les données fournies. N'invente AUCUNE caractéristique ni mesure.
+- ATTENTION accessoires non inclus : les visuels marketing montrent souvent un étui, un support ou des accessoires qui NE SONT PAS fournis. Ne mentionne JAMAIS un accessoire qui n'est pas explicitement listé dans le titre ou les specs brutes.
 - Jamais de mention "AliExpress", "SPECIFICATIONS", "Brand Name: NONE" ni de charabia traduit.`;
 
   const user = `Produit brut à transformer :
@@ -236,7 +238,7 @@ Réponds en JSON strict :
 Consignes :
 - title : format "[nature + bénéfice] — [Mascotte]™" (ex: "Douchette de bain pour chien avec brosse silicone — Rinso™").
 - mascot : 4-6 lettres, mignon, FR/EN, finissant par -y ou -o, distinctif.
-- descriptionHtml : 2 paragraphes courts (problème vécu → solution concrète) puis 3 à 5 puces de bénéfices précis et véridiques.
+- descriptionHtml : un paragraphe d'accroche (problème vécu → solution concrète), puis la COMPOSITION/CONTENU EXACT quand c'est pertinent (ex: "<strong>Contenu : 4 pièces en acier inoxydable</strong>" + la liste), puis 3 à 5 puces de bénéfices ET caractéristiques précis et véridiques (matière, dimensions/capacité si connues). Jamais d'accessoire non confirmé (étui, support...).
 - category : une seule parmi chien, chat, toilettage, alimentation, couchage, balade, jeu.
 - collections : 1 à 3 parmi les collections disponibles ci-dessus. TOUJOURS l'audience (Pour chien et/ou Pour chat) + la collection fonctionnelle correspondante.
 - priceEUR : prix de vente UNIQUE (appliqué à toutes les variantes), aligné sur le PRIX DU MARCHÉ FRANÇAIS pour ce type de produit. Marge MODESTE : la marque est nouvelle et inconnue, donc rester compétitif et ne PAS être gourmand. Plancher : au moins 2× le coût d'achat le plus élevé (${costMax != null ? `soit ≥ ${(costMax * 2).toFixed(2)}€` : "viabilité pub"}). Terminaison en .90 (ex: 14.90, 24.90).
