@@ -2,12 +2,12 @@ name: Social — 3 posts/day (morning + midday + evening)
 
 on:
   schedule:
-    # Morning 10h Paris (08h UTC summer)
-    - cron: "0 8 * * *"
-    # Midday 14h Paris (12h UTC summer)
-    - cron: "0 12 * * *"
-    # Evening 19h Paris (17h UTC summer)
-    - cron: "0 17 * * *"
+    # Morning ~10h Paris (08h UTC summer) — minute 17 to dodge top-of-hour GH load
+    - cron: "17 8 * * *"
+    # Midday ~14h Paris (12h UTC summer)
+    - cron: "17 12 * * *"
+    # Evening ~19h Paris (17h UTC summer)
+    - cron: "17 17 * * *"
   workflow_dispatch:
     inputs:
       project:
