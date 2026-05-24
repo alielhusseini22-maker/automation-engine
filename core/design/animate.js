@@ -146,7 +146,7 @@ export async function animateCarousel({
  * @param {string} args.outputPath - sortie MP4
  * @param {boolean} [args.recodeVideo=false] - si true, ré-encode la vidéo (utile si format pas standard)
  */
-export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, recodeVideo = false }) {
+export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, recodeVideo = false, audioFadeOutSec = 0, videoDurationSec = null }) {
   if (!fs.existsSync(path.dirname(outputPath))) {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   }
@@ -156,24 +156,32 @@ export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, re
     "-stream_loop", "-1", "-i", audioPath,
   ];
 
-  // Si recodeVideo : on reformate aussi en 1080x1920 vertical (scale + pad beige).
-  // Indispensable pour les Reels TikTok/Insta si la vidéo source est landscape.
+  // Fondu de sortie de la MUSIQUE : évite que la piste se coupe net en fin de vidéo.
+  // Nécessite la durée totale de la vidéo pour positionner le début du fondu.
+  const wantAudioFade = audioFadeOutSec > 0 && videoDurationSec != null && videoDurationSec > audioFadeOutSec;
+  const afadeStart = wantAudioFade ? videoDurationSec - audioFadeOutSec : 0;
+
+  const filters = [];
+  // Si recodeVideo : on reformate en 1080x1920 vertical (scale + pad beige) — source landscape.
   if (recodeVideo) {
-    args.push(
-      "-filter_complex",
-      "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF4EDE3,setsar=1[outv]",
-      "-map", "[outv]",
-      "-map", "1:a:0",
-      "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "20",
-      "-r", "30"
-    );
-  } else {
-    args.push(
-      "-map", "0:v:0",
-      "-map", "1:a:0",
-      "-c:v", "copy"
-    );
+    filters.push("[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF4EDE3,setsar=1[outv]");
   }
+  if (wantAudioFade) {
+    filters.push(`[1:a]afade=t=out:st=${afadeStart.toFixed(3)}:d=${audioFadeOutSec}[outa]`);
+  }
+  if (filters.length) {
+    args.push("-filter_complex", filters.join(";"));
+  }
+
+  // Mapping vidéo : reformatée si recode, sinon copie sans ré-encodage.
+  if (recodeVideo) {
+    args.push("-map", "[outv]", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "20", "-r", "30");
+  } else {
+    args.push("-map", "0:v:0", "-c:v", "copy");
+  }
+
+  // Mapping audio : piste avec fondu de sortie, sinon piste brute.
+  args.push("-map", wantAudioFade ? "[outa]" : "1:a:0");
 
   args.push(
     "-c:a", "aac",
@@ -212,7 +220,7 @@ export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, re
  * @param {string} args.outputPath - chemin du segment MP4 de sortie
  * @returns {Promise<string>} outputPath
  */
-export async function buildSegmentWithOverlay({ clipPath, overlayPngPath, durationSec = 3.8, outputPath }) {
+export async function buildSegmentWithOverlay({ clipPath, overlayPngPath, durationSec = 3.8, videoFadeOutSec = 0, outputPath }) {
   if (!fs.existsSync(path.dirname(outputPath))) {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   }
@@ -220,6 +228,11 @@ export async function buildSegmentWithOverlay({ clipPath, overlayPngPath, durati
   const fadeDur = 0.4;
   // st de sortie = juste avant la fin (jamais négatif si durationSec est court)
   const fadeOutStart = Math.max(0, durationSec - fadeDur);
+  // Optionnel : fondu de la VIDÉO vers le noir en fin de segment. Utilisé sur le DERNIER clip
+  // pour enchaîner en douceur (dip-to-black) vers la carte produit outro — évite la coupure nette.
+  const vFade = videoFadeOutSec > 0
+    ? `,fade=t=out:st=${Math.max(0, durationSec - videoFadeOutSec).toFixed(3)}:d=${videoFadeOutSec}`
+    : "";
 
   const args = [
     // Input 0 : le clip vidéo, coupé à durationSec
@@ -228,9 +241,9 @@ export async function buildSegmentWithOverlay({ clipPath, overlayPngPath, durati
     "-loop", "1", "-t", String(durationSec), "-i", overlayPngPath,
   ];
 
-  // Filtre : [0] cover+crop 1080x1920 → [bg] ; [1] alpha fade in/out → [txt] ; overlay plein cadre → [v]
+  // Filtre : [0] cover+crop 1080x1920 (+ fondu noir optionnel) → [bg] ; [1] alpha fade in/out → [txt] ; overlay plein cadre → [v]
   const filter =
-    `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[bg];` +
+    `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1${vFade}[bg];` +
     `[1:v]format=rgba,fade=t=in:st=0:d=${fadeDur}:alpha=1,fade=t=out:st=${fadeOutStart}:d=${fadeDur}:alpha=1[txt];` +
     `[bg][txt]overlay=0:0[v]`;
 
@@ -304,6 +317,80 @@ export async function concatSegments({ segmentPaths, outputPath }) {
       else reject(new Error(`ffmpeg exited ${code}. Last stderr:\n${stderr.slice(-1500)}`));
     });
   });
+}
+
+/**
+ * Construit UN segment vidéo 1080x1920 (sans audio) à partir d'une IMAGE PLEIN CADRE (carte produit outro).
+ *
+ * - l'image (déjà 1080x1920) est bouclée pendant `durationSec`
+ * - fondu d'ENTRÉE depuis le noir (enchaîne en douceur depuis le dip-to-black du dernier clip)
+ * - fondu de SORTIE vers le noir (fin douce de la vidéo — corrige la coupure nette)
+ * - même codec/format que buildSegmentWithOverlay → concat `-c copy` possible
+ *
+ * @param {object} args
+ * @param {string} args.imagePath - PNG plein cadre 1080x1920 (carte produit)
+ * @param {number} [args.durationSec=3.6] - durée du segment outro
+ * @param {number} [args.fadeInSec=0.5] - fondu d'entrée depuis le noir
+ * @param {number} [args.fadeOutSec=0.8] - fondu de sortie vers le noir
+ * @param {string} args.outputPath - chemin du segment MP4 de sortie
+ * @returns {Promise<string>} outputPath
+ */
+export async function buildStillSegment({ imagePath, durationSec = 3.6, fadeInSec = 0.5, fadeOutSec = 0.8, outputPath }) {
+  if (!fs.existsSync(path.dirname(outputPath))) {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  }
+  const fadeOutStart = Math.max(0, durationSec - fadeOutSec);
+
+  const filter =
+    `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,format=yuv420p,` +
+    `fade=t=in:st=0:d=${fadeInSec},fade=t=out:st=${fadeOutStart.toFixed(3)}:d=${fadeOutSec}[v]`;
+
+  const args = [
+    "-loop", "1", "-t", String(durationSec), "-i", imagePath,
+    "-filter_complex", filter,
+    "-map", "[v]",
+    "-an",
+    "-c:v", "libx264",
+    "-pix_fmt", "yuv420p",
+    "-preset", "fast",
+    "-crf", "20",
+    "-r", "30",
+    "-t", String(durationSec),
+    "-movflags", "+faststart",
+    "-y",
+    outputPath,
+  ];
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", args, { windowsHide: true });
+    let stderr = "";
+    proc.stderr.on("data", (d) => { stderr += d.toString(); });
+    proc.on("error", (err) => reject(new Error(`ffmpeg spawn failed: ${err.message}`)));
+    proc.on("close", (code) => {
+      if (code === 0) resolve(outputPath);
+      else reject(new Error(`ffmpeg exited ${code}. Last stderr:\n${stderr.slice(-1500)}`));
+    });
+  });
+}
+
+/**
+ * Retourne la durée (en secondes) d'un fichier média via ffprobe, ou null si échec.
+ * Sert à positionner précisément le fondu musical sur la durée RÉELLE de la vidéo
+ * (les clips Pexels peuvent être plus courts que la durée nominale du segment).
+ */
+export async function probeDurationSec(filePath) {
+  try {
+    const { stdout } = await execFileP("ffprobe", [
+      "-v", "error",
+      "-show_entries", "format=duration",
+      "-of", "default=noprint_wrappers=1:nokey=1",
+      filePath,
+    ]);
+    const d = parseFloat(stdout.trim());
+    return Number.isFinite(d) ? d : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
