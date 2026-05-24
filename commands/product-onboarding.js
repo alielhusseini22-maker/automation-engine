@@ -9,12 +9,22 @@
 //
 // Usage : node commands/product-onboarding.js --project poils-precieux
 
-import "dotenv/config";
+import dotenv from "dotenv";
+// override: true → le .env local l'emporte sur une variable shell vide/obsolète
+// (sans effet en CI, où il n'y a pas de .env et où les secrets sont injectés).
+dotenv.config({ override: true });
 import fs from "node:fs";
 import path from "node:path";
 import { loadProject, parseArgs, runDir } from "../core/config.js";
 import { listProductsForImages, addProductTag } from "../core/shopify/client.js";
-import { fetchProductForPolish, planPolish, executePolish } from "../core/polish/product.js";
+import {
+  fetchProductForPolish,
+  planPolish,
+  executePolish,
+  generateProductPolishAI,
+  applyAIPolish,
+  fetchCollections,
+} from "../core/polish/product.js";
 import { regenerateProductImages } from "../core/images/product-regen.js";
 
 const ONBOARDED_TAG = "auto-onboarded";
@@ -32,6 +42,14 @@ async function main() {
   if (products.length === 0) {
     console.log(`[onboarding] nothing to do (no products tagged 'nouveau-produit' without '${ONBOARDED_TAG}')`);
     return;
+  }
+
+  // Collections de la boutique (pour rattachement par catégorie, résolu côté Claude)
+  let collections = [];
+  try {
+    collections = await fetchCollections(config);
+  } catch (err) {
+    console.log(`[onboarding] ⚠ couldn't fetch collections: ${err.message}`);
   }
 
   const results = [];
@@ -52,7 +70,22 @@ async function main() {
       console.log(`  ✗ polish failed: ${err.message}`);
     }
 
-    // 2. IMAGES (re-fetch après polish car variantes ont pu changer)
+    // 2. POLISH IA : titre FR + description conforme, élagage variantes (AVANT images), collections
+    let aiPlan = null;
+    try {
+      const full2 = await fetchProductForPolish(config, p.id);
+      aiPlan = await generateProductPolishAI(config, full2, {
+        collectionTitles: collections.map((c) => c.title),
+        maxColors: config.polish?.maxColors || 6,
+      });
+      console.log(`  ai-polish → "${aiPlan.title}"`);
+      const aiLog = await applyAIPolish(config, full2, aiPlan, { collections, dryRun: args.dryRun });
+      for (const line of aiLog) console.log(`    ✓ ${line}`);
+    } catch (err) {
+      console.log(`  ✗ ai-polish failed: ${err.message}`);
+    }
+
+    // 3. IMAGES (re-fetch après polish car variantes ont pu changer)
     let imgResult = { generated: 0, deleted: 0, log: [] };
     if (!args.dryRun) {
       try {

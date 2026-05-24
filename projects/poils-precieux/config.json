@@ -64,6 +64,9 @@
     "alignPricesPerColor": true,
     "extractDimensionsToDescription": true,
     "simplifySingleVariantOption": true,
+    "generateContentAI": true,
+    "assignCollections": true,
+    "maxColors": 6,
     "titlePattern": "[Nature] [Bénéfice] — [Mascotte]™",
     "handlePattern": "[nature]-[mascotte]"
   },
