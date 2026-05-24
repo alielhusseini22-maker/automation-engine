@@ -9,6 +9,7 @@
     "blog": "node commands/blog.js",
     "social": "node commands/social.js",
     "onboard": "node commands/product-onboarding.js",
+    "repolish": "node commands/repolish-descriptions.js",
     "weekly-plan": "node commands/weekly-plan.js",
     "test:smoke": "node commands/smoke.js"
   },

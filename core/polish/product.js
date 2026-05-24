@@ -250,6 +250,49 @@ Consignes :
 }
 
 /**
+ * Réécrit la description d'un produit dans le GABARIT MAISON Poils Précieux,
+ * pour une cohérence totale du catalogue. Utilise UNIQUEMENT les infos fournies
+ * (titre + description actuelle + variantes) — n'invente aucune spec ni garantie.
+ * @returns {string} descriptionHtml au gabarit
+ */
+export async function generateTemplateDescription(config, product) {
+  const current = stripHtml(product.descriptionHtml).slice(0, 2200);
+  const variantList = (product.variants?.nodes || product.variants || [])
+    .map((v) => v.title)
+    .filter((t) => t && t !== "Default Title")
+    .slice(0, 30)
+    .join(" | ");
+
+  const system = `Tu es responsable des fiches produit de Poils Précieux, boutique e-commerce française premium et minimaliste d'accessoires pour chiens et chats.
+Tu RÉÉCRIS la description d'un produit existant dans le GABARIT MAISON exact, pour une cohérence parfaite du catalogue.
+Règles : utilise UNIQUEMENT les informations fournies (titre + infos actuelles + variantes) ; n'invente AUCUNE spec, mesure, matière ou garantie produit non déductible. Aucun emoji (le caractère ✓ est autorisé dans les garanties). Français premium, honnête, orienté bénéfice. Ne mentionne jamais un accessoire non confirmé (étui, support...).`;
+
+  const user = `Réécris cette fiche dans le gabarit Poils Précieux.
+
+TITRE : ${product.title}
+INFOS ACTUELLES (source à reformuler, ne rien inventer au-delà) : ${current || "(vide)"}
+VARIANTES : ${variantList || "(variante unique)"}
+
+GABARIT EXACT (respecte les balises h3 et l'ordre ; la mascotte est le nom après « — » dans le titre) :
+<p>[Accroche : le problème vécu par le maître, concret et relatable]</p>
+<h3>Mascotte™ : [bénéfice clé en quelques mots]</h3>
+<p>[Comment ça marche / la solution concrète : fonctionnement et matière réels]</p>
+<h3>Pour qui ?</h3>
+<ul><li>[profil 1]</li><li>[profil 2]</li><li>[profil 3]</li></ul>
+<h3>[Dimensions | Contenu | Caractéristiques]</h3>
+<ul><li>[specs/contenu réels ; si plusieurs variantes ou packs, précise ce que contient chaque option, ex: « Pack de 4 = 4 traceurs »]</li></ul>
+<h3>Le bon geste</h3>
+<p>[utilisation et entretien concrets]</p>
+<h3>Garanties Poils Précieux</h3>
+<ul><li>✓ [garantie produit 1]</li><li>✓ [garantie produit 2]</li><li>✓ [garantie produit 3]</li><li>✓ Livraison France 5-9 jours ouvrés — retours 30 jours</li></ul>
+
+Consignes : 4e section = « Dimensions » pour le textile/tailles, « Contenu » pour les kits/packs/lots, « Caractéristiques » sinon. Les 3 premières garanties doivent être des FAITS PRODUIT vérifiables (matière, entretien, sécurité, compatibilité, etc.) — JAMAIS une promesse de service inventée (pas de « SAV 24h », « satisfait ou remboursé », « testé en laboratoire » si ce n'est pas dans les infos). Termine TOUJOURS les Garanties par la ligne « ✓ Livraison France 5-9 jours ouvrés — retours 30 jours ». Réponds en JSON strict : { "descriptionHtml": "..." }`;
+
+  const { data } = await claudeJSON(config, { system, user, maxTokens: 2500 });
+  return data.descriptionHtml;
+}
+
+/**
  * Applique le plan AI. ORDRE important :
  *   1) supprime les variantes superflues (AVANT images → économie),
  *   2) renomme options + valeurs gardées,
