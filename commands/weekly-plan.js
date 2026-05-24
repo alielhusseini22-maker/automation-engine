@@ -32,7 +32,7 @@ async function main() {
 
   const { plan, usage } = await generateWeeklyPlan(config, weekNumber);
 
-  // Écrit le plan (lu par social + blog) — committé dans le repo
+  // Écrit le plan JSON (lu par social + blog) — committé dans le repo
   const planFile = writeWeeklyPlan(config, plan);
   console.log(`[weekly-plan] ✓ plan written: ${planFile}`);
   console.log(`[weekly-plan]   theme: ${plan.themeOfWeek}`);
@@ -40,7 +40,12 @@ async function main() {
   console.log(`[weekly-plan]   pexels categories: ${(plan.focusPexelsCategories || []).join(", ")}`);
   console.log(`[weekly-plan]   blog angle: ${plan.blogAngle}`);
 
-  // Copie lisible dans runs/ + artifact
+  // Écrit le PLAN.md lisible DANS le projet (committé → URL GitHub fixe, rendu joliment)
+  const mdFile = path.join(config._projectDir, "weekly-plan.md");
+  fs.writeFileSync(mdFile, renderPlanMarkdown(plan), "utf8");
+  console.log(`[weekly-plan] ✓ readable plan: ${mdFile}`);
+
+  // Copie aussi dans runs/ pour l'artifact (historique)
   fs.writeFileSync(path.join(dir, "PLAN.md"), renderPlanMarkdown(plan), "utf8");
   fs.writeFileSync(path.join(dir, "plan.json"), JSON.stringify(plan, null, 2), "utf8");
 

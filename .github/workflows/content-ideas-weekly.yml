@@ -33,11 +33,11 @@ jobs:
           PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
         run: node commands/weekly-plan.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
 
-      - name: Commit weekly-plan.json (lu par social + blog)
+      - name: Commit weekly-plan (json lu par pipelines + md lisible)
         run: |
           git config user.name "automation-bot"
           git config user.email "bot@automation-engine.local"
-          git add projects/*/weekly-plan.json
+          git add projects/*/weekly-plan.json projects/*/weekly-plan.md
           git commit -m "weekly-plan: $(date +%Y-%m-%d)" || echo "Nothing to commit"
           git push || echo "Nothing to push"
 
