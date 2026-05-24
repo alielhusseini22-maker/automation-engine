@@ -27,8 +27,9 @@ export async function closeBrowser() {
  * @param {number} args.height - viewport height (1080 carré, 1920 vertical)
  * @param {string} args.outputPath - où sauvegarder le PNG
  * @param {number} [args.waitMs=400] - délai pour laisser les fonts/animations stabiliser
+ * @param {boolean} [args.transparent=false] - si true, screenshot avec fond alpha (omitBackground) — utile pour overlays vidéo
  */
-export async function renderHtmlToPng({ html, width, height, outputPath, waitMs = 400 }) {
+export async function renderHtmlToPng({ html, width, height, outputPath, waitMs = 400, transparent = false }) {
   const browser = await getBrowser();
   const context = await browser.newContext({
     viewport: { width, height },
@@ -38,7 +39,7 @@ export async function renderHtmlToPng({ html, width, height, outputPath, waitMs 
   await page.setContent(html, { waitUntil: "networkidle" });
   await page.waitForTimeout(waitMs);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  await page.screenshot({ path: outputPath, type: "png", omitBackground: false });
+  await page.screenshot({ path: outputPath, type: "png", omitBackground: transparent });
   await context.close();
   return outputPath;
 }
@@ -56,6 +57,7 @@ export async function renderCarousel({ slides, outputDir, basename }) {
       height: slide.height || 1080,
       outputPath,
       waitMs: slide.waitMs || 400,
+      transparent: slide.transparent || false,
     });
     paths.push(outputPath);
   }

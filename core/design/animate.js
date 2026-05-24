@@ -199,6 +199,114 @@ export async function overlayMusicOnVideo({ videoPath, audioPath, outputPath, re
 }
 
 /**
+ * Construit UN segment vidéo 1080x1920 (sans audio) à partir d'un clip + un overlay PNG transparent.
+ *
+ * - le clip est coupé à `durationSec`, scalé en COVER puis croppé exact 1080x1920 (pas de bandes beige)
+ * - le PNG transparent est posé plein cadre avec un fondu d'entrée (0.4s) et de sortie (0.4s) sur l'alpha
+ * - sortie H.264 yuv420p, 30 fps, CRF 20 — codec/format identiques entre segments pour permettre un concat `-c copy`
+ *
+ * @param {object} args
+ * @param {string} args.clipPath - chemin du clip vidéo source (Pexels MP4)
+ * @param {string} args.overlayPngPath - chemin du PNG overlay transparent (1080x1920)
+ * @param {number} [args.durationSec=3.8] - durée du segment
+ * @param {string} args.outputPath - chemin du segment MP4 de sortie
+ * @returns {Promise<string>} outputPath
+ */
+export async function buildSegmentWithOverlay({ clipPath, overlayPngPath, durationSec = 3.8, outputPath }) {
+  if (!fs.existsSync(path.dirname(outputPath))) {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  }
+
+  const fadeDur = 0.4;
+  // st de sortie = juste avant la fin (jamais négatif si durationSec est court)
+  const fadeOutStart = Math.max(0, durationSec - fadeDur);
+
+  const args = [
+    // Input 0 : le clip vidéo, coupé à durationSec
+    "-t", String(durationSec), "-i", clipPath,
+    // Input 1 : le PNG overlay en boucle sur toute la durée
+    "-loop", "1", "-t", String(durationSec), "-i", overlayPngPath,
+  ];
+
+  // Filtre : [0] cover+crop 1080x1920 → [bg] ; [1] alpha fade in/out → [txt] ; overlay plein cadre → [v]
+  const filter =
+    `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[bg];` +
+    `[1:v]format=rgba,fade=t=in:st=0:d=${fadeDur}:alpha=1,fade=t=out:st=${fadeOutStart}:d=${fadeDur}:alpha=1[txt];` +
+    `[bg][txt]overlay=0:0[v]`;
+
+  args.push(
+    "-filter_complex", filter,
+    "-map", "[v]",
+    "-an", // pas d'audio sur les segments (la musique est ajoutée après le concat)
+    "-c:v", "libx264",
+    "-pix_fmt", "yuv420p",
+    "-preset", "fast",
+    "-crf", "20",
+    "-r", "30",
+    "-t", String(durationSec),
+    "-movflags", "+faststart",
+    "-y",
+    outputPath
+  );
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", args, { windowsHide: true });
+    let stderr = "";
+    proc.stderr.on("data", (d) => { stderr += d.toString(); });
+    proc.on("error", (err) => reject(new Error(`ffmpeg spawn failed: ${err.message}`)));
+    proc.on("close", (code) => {
+      if (code === 0) resolve(outputPath);
+      else reject(new Error(`ffmpeg exited ${code}. Last stderr:\n${stderr.slice(-1500)}`));
+    });
+  });
+}
+
+/**
+ * Concatène plusieurs segments en une seule vidéo via le CONCAT DEMUXER.
+ * Tous les segments doivent partager codec + résolution + fps → on peut utiliser `-c copy` (rapide, sans ré-encode).
+ *
+ * @param {object} args
+ * @param {string[]} args.segmentPaths - chemins absolus des segments MP4 (dans l'ordre)
+ * @param {string} args.outputPath - chemin de la vidéo concaténée
+ * @returns {Promise<string>} outputPath
+ */
+export async function concatSegments({ segmentPaths, outputPath }) {
+  if (!segmentPaths?.length) throw new Error("concatSegments: no segments provided");
+  const outDir = path.dirname(outputPath);
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+  // Liste pour le demuxer concat : une ligne `file '<abs path>'` par segment.
+  // Les apostrophes dans un chemin sont échappées selon la syntaxe ffmpeg ('\'').
+  const listPath = path.join(outDir, `concat-${Date.now()}.txt`);
+  const listBody = segmentPaths
+    .map((p) => `file '${path.resolve(p).replace(/'/g, "'\\''")}'`)
+    .join("\n");
+  fs.writeFileSync(listPath, listBody + "\n", "utf8");
+
+  const args = [
+    "-f", "concat",
+    "-safe", "0",
+    "-i", listPath,
+    "-c", "copy",
+    "-movflags", "+faststart",
+    "-y",
+    outputPath,
+  ];
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", args, { windowsHide: true });
+    let stderr = "";
+    proc.stderr.on("data", (d) => { stderr += d.toString(); });
+    proc.on("error", (err) => reject(new Error(`ffmpeg spawn failed: ${err.message}`)));
+    proc.on("close", (code) => {
+      try { fs.unlinkSync(listPath); } catch { /* best effort cleanup */ }
+      if (code === 0) resolve(outputPath);
+      else reject(new Error(`ffmpeg exited ${code}. Last stderr:\n${stderr.slice(-1500)}`));
+    });
+  });
+}
+
+/**
  * Vérifie qu'ffmpeg est disponible dans le PATH.
  */
 export async function ffmpegAvailable() {

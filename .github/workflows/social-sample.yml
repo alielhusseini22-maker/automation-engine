@@ -1,0 +1,56 @@
+name: Social Sample — montage video preview (manual)
+
+# Rend un échantillon de vidéo montage et l'upload sur Cloudinary (URL dans les logs + artifact).
+# NE poste PAS sur Buffer, n'enregistre PAS d'historique. Sert à valider le rendu avant mise en prod.
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+      concept:
+        description: "Concept (emotion|astuce|relatable), vide = auto"
+        required: false
+        default: "emotion"
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Render montage sample
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: |
+          node commands/social-sample.js \
+            --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
+            --concept "${{ github.event.inputs.concept }}"
+
+      - name: Upload sample artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: montage-sample-${{ github.event.inputs.concept }}-${{ github.run_id }}
+          path: runs/poils-precieux/social-sample/
+          retention-days: 30

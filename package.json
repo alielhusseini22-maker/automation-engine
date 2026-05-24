@@ -8,6 +8,7 @@
     "polish": "node commands/polish.js",
     "blog": "node commands/blog.js",
     "social": "node commands/social.js",
+    "social-sample": "node commands/social-sample.js",
     "onboard": "node commands/product-onboarding.js",
     "repolish": "node commands/repolish-descriptions.js",
     "weekly-plan": "node commands/weekly-plan.js",
