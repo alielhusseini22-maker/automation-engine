@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Génère + schedule un post social — version "designed posts" (no more bad videos).
 //
-// 2 slots/jour :
-//   - morning (matin)  → contenu éducatif designed (hook carousel ou tip card)
-//   - evening (soir)   → product highlight designed (vraie photo produit + CTA)
+// 2 posts/jour :
+//   - midday (midi)   → montage vidéo branded (concept tournant + carte produit)
+//   - evening (soir)  → product-highlight (vraie photo produit + CTA)
 //
 // Si --slot fourni explicitement, on l'utilise. Sinon on déduit de l'heure courante.
 //
@@ -30,8 +30,7 @@ const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "frid
 
 function detectSlot(date = new Date()) {
   const h = date.getHours();
-  if (h < 12) return "morning";   // before 12h → morning (10h schedule)
-  if (h < 16) return "midday";    // 12-16h → midday (14h schedule)
+  if (h < 16) return "midday";    // jusqu'à 16h → midday (14h schedule)
   return "evening";                // 16h+ → evening (19h schedule)
 }
 

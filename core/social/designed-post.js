@@ -53,24 +53,12 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
   throw new Error(`Unknown template type: ${templateType}`);
 }
 
-function pickTemplate(slot, dayName) {
-  // 3 slots/jour :
-  //   - morning (10h)  : éducatif designed (hook-carousel OU tip-card alterné)
+function pickTemplate(slot) {
+  // 2 slots/jour (créneau éducatif du matin supprimé) :
   //   - midday (14h)   : montage multi-clips branded (concept varié) + carte produit de fin
   //   - evening (19h)  : product-highlight (drive ventes)
-  if (slot === "midday") return "montage";
   if (slot === "evening") return "product-highlight";
-  // Morning : alternance hook-carousel (mon/wed/fri) / tip-card (autres jours)
-  const morningRotation = {
-    monday: "hook-carousel",
-    tuesday: "tip-card",
-    wednesday: "hook-carousel",
-    thursday: "tip-card",
-    friday: "hook-carousel",
-    saturday: "tip-card",
-    sunday: "hook-carousel",
-  };
-  return morningRotation[dayName] || "tip-card";
+  return "montage"; // midday (et tout autre cas) → montage
 }
 
 // ───────────────────────────────────────────────────────────
