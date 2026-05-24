@@ -44,10 +44,10 @@ jobs:
             ${{ github.event.inputs.focus && format('--focus {0}', github.event.inputs.focus) || '' }} \
             ${{ github.event.inputs.count && format('--count {0}', github.event.inputs.count) || '' }}
 
-      - name: Commit run artifacts
-        run: |
-          git config user.name "automation-bot"
-          git config user.email "bot@automation-engine.local"
-          git add runs/
-          git commit -m "sourcing: weekly run $(date +%Y-%m-%d)" || echo "Nothing to commit"
-          git push || echo "Nothing to push"
+      - name: Upload sourcing brief as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sourcing-brief-${{ github.run_id }}
+          path: runs/poils-precieux/sourcing/
+          retention-days: 90

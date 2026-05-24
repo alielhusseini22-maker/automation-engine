@@ -33,10 +33,10 @@ jobs:
           PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
         run: node commands/content-ideas.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
 
-      - name: Commit brief
-        run: |
-          git config user.name "automation-bot"
-          git config user.email "bot@automation-engine.local"
-          git add runs/
-          git commit -m "content-ideas: weekly brief $(date +%Y-%m-%d)" || echo "Nothing to commit"
-          git push || echo "Nothing to push"
+      - name: Upload brief as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-brief-${{ github.run_id }}
+          path: runs/poils-precieux/content-ideas/
+          retention-days: 90
