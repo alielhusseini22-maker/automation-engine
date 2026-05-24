@@ -213,6 +213,7 @@ Règles absolues :
 - Description HONNÊTE et PRÉCISE sur le fonctionnement RÉEL du produit : explique concrètement comment il marche et à quoi il sert, sans promesse fausse ni superlatif creux.
 - COMPOSITION EXACTE : indique clairement ce que le client reçoit (nombre et nature des pièces, ex: "4 pièces : 1 ciseau droit, 1 ciseau courbé, 1 ciseau à effiler, 1 peigne") et les caractéristiques concrètes (matière, dimensions, capacité) UNIQUEMENT d'après les données fournies. N'invente AUCUNE caractéristique ni mesure.
 - ATTENTION accessoires non inclus : les visuels marketing montrent souvent un étui, un support ou des accessoires qui NE SONT PAS fournis. Ne mentionne JAMAIS un accessoire qui n'est pas explicitement listé dans le titre ou les specs brutes.
+- INTERDIT d'inventer certifications (« certifié bio », « norme CE »), origines (« importé du Japon »), avals vétérinaires, pourcentages ou multiplicateurs de performance : ne les affirme QUE s'ils figurent explicitement dans les specs brutes.
 - Jamais de mention "AliExpress", "SPECIFICATIONS", "Brand Name: NONE" ni de charabia traduit.`;
 
   const user = `Produit brut à transformer :
@@ -274,7 +275,8 @@ STYLE — LE PLUS IMPORTANT : ça doit sonner HUMAIN, jamais « généré par IA
 - Glisse un aparté complice, comme une marque qui parle vraiment à des maîtres d'animaux (ton chaleureux, un brin d'humour discret quand c'est naturel).
 - Pas de symétrie robotique : les puces peuvent avoir des longueurs différentes.
 
-Règles dures : utilise UNIQUEMENT les informations fournies (titre + infos actuelles + variantes) ; n'invente AUCUNE spec, mesure, matière ou garantie produit non déductible. Aucun emoji (le caractère ✓ est autorisé dans les garanties). Ne mentionne jamais un accessoire non confirmé (étui, support...).`;
+Règles dures : utilise UNIQUEMENT les informations fournies (titre + infos actuelles + variantes) ; n'invente AUCUNE spec, mesure, matière ou garantie produit non déductible. Aucun emoji (le caractère ✓ est autorisé dans les garanties). Ne mentionne jamais un accessoire non confirmé (étui, support...).
+INTERDIT ABSOLU d'inventer : certifications (« certifié bio », « norme CE »), origines (« importé du Japon »), avals (« recommandé/reconnu par les vétérinaires »), pourcentages ou multiplicateurs (« 80 % des chats », « 10× plus absorbant »). N'affirme une certification, une origine, une norme, un aval professionnel ou un chiffre QUE s'il figure explicitement dans les infos fournies — sinon reformule de façon qualitative et honnête.`;
 
   const user = `Réécris cette fiche dans le gabarit Poils Précieux.
 
