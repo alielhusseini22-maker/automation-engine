@@ -11,6 +11,7 @@ import { shopifyQuery } from "../shopify/client.js";
 import { searchVideos, pickFreshVideo, markUsed, pickBestVideoFile, downloadFile, hasPexelsKey, pickBrandQuery } from "./pexels.js";
 import { overlayMusicOnVideo, ffmpegAvailable } from "../design/animate.js";
 import { pickMusicTrack, moodForContext } from "../design/music.js";
+import { loadWeeklyPlan } from "../strategy/weekly-plan.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -278,8 +279,18 @@ async function generatePexelsVideo(config, runDir) {
   if (!hasPexelsKey()) throw new Error("PEXELS_API_KEY required for pexels-video template");
   if (!(await ffmpegAvailable())) throw new Error("ffmpeg required for pexels-video template");
 
-  // 1. Pick brand-relevant query
-  const queryObj = pickBrandQuery();
+  // 1. Pick brand-relevant query (biaisé par le plan hebdo si présent)
+  const plan = loadWeeklyPlan(config);
+  const preferSpecies = plan?.preferSpecies && plan.preferSpecies !== "null" ? plan.preferSpecies : null;
+  let queryObj = pickBrandQuery({ preferSpecies });
+  // Si le plan définit des catégories prioritaires, retenter pour matcher
+  if (plan?.focusPexelsCategories?.length) {
+    for (let i = 0; i < 5; i++) {
+      if (plan.focusPexelsCategories.includes(queryObj.category)) break;
+      queryObj = pickBrandQuery({ preferSpecies });
+    }
+    console.log(`[pexels-video] weekly-plan focus categories: ${plan.focusPexelsCategories.join(", ")}`);
+  }
   console.log(`[pexels-video] query: "${queryObj.query}" (cat=${queryObj.category}, species=${queryObj.species || "any"})`);
 
   // 2. Try portrait first (best for Reels), fallback to landscape (we'll reformat with pad)
@@ -402,9 +413,20 @@ async function pickFeatureProduct(config) {
   const products = data.products.nodes.filter((p) => p.featuredMedia?.preview?.image?.url);
   if (products.length === 0) throw new Error("No products with images available");
 
-  // Rotation simple : varie selon la date (jour ISO de l'année)
+  // Si un plan hebdo existe, prioriser les produits du focus de la semaine.
+  const plan = loadWeeklyPlan(config);
+  let pool = products;
+  if (plan?.focusProductHandles?.length) {
+    const focused = products.filter((p) => plan.focusProductHandles.includes(p.handle));
+    if (focused.length > 0) {
+      pool = focused;
+      console.log(`[product] using weekly-plan focus (${focused.length} products): ${plan.themeOfWeek}`);
+    }
+  }
+
+  // Rotation : varie selon la date (jour ISO de l'année) dans le pool retenu
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const pick = products[dayOfYear % products.length];
+  const pick = pool[dayOfYear % pool.length];
 
   return {
     id: pick.id,

@@ -18,14 +18,19 @@ export function getNextTopicCategory(config, weekNumber) {
 /**
  * Demande à Claude (avec web_search) de proposer 1 sujet d'article, en évitant les doublons.
  */
-export async function pickTopic(config, { existingTitles = [], weekNumber, locale = "fr-FR" }) {
+export async function pickTopic(config, { existingTitles = [], weekNumber, locale = "fr-FR", weeklyPlan = null }) {
   const category = getNextTopicCategory(config, weekNumber);
   const seasonHint = currentSeasonHint();
+
+  // Si un plan hebdo impose un angle, on l'utilise comme direction forte.
+  const planDirective = weeklyPlan?.blogAngle
+    ? `\n\nDIRECTION IMPOSÉE PAR LE PLAN HEBDO (priorité haute) :\n- Thème de la semaine : ${weeklyPlan.themeOfWeek}\n- Angle article à suivre : ${weeklyPlan.blogAngle}\n- Mot-clé principal visé : ${weeklyPlan.blogPrimaryKeyword || "(libre)"}\nReste cohérent avec cet angle tout en optimisant le SEO.`
+    : "";
 
   const system = `You are a content strategist for the French pet brand Poils Précieux. You select weekly blog topics that drive organic search traffic in France.
 
 Audience: French dog & cat owners 25-45 yo, urban, premium-leaning.
-Tone : factuel + bienveillant. Pas survendu.`;
+Tone : factuel + bienveillant. Pas survendu.${planDirective}`;
 
   const user = `Select ONE blog article topic for this week.
 

@@ -21,6 +21,7 @@ import { listExistingArticles, uploadImageBuffer, createArticle } from "../core/
 import { pickTopic } from "../core/blog/topics.js";
 import { writeArticle } from "../core/blog/writer.js";
 import { generateHero } from "../core/blog/hero.js";
+import { loadWeeklyPlan } from "../core/strategy/weekly-plan.js";
 
 function isoWeek(d = new Date()) {
   const t = new Date(d.valueOf());
@@ -49,7 +50,9 @@ async function main() {
     console.log(`[blog] Step 1/5 — picking topic (Claude + web_search)`);
     const existing = await listExistingArticles(config);
     const titles = existing.map((a) => a.title);
-    const result = await pickTopic(config, { existingTitles: titles, weekNumber, locale: config.project.locale });
+    const weeklyPlan = loadWeeklyPlan(config);
+    if (weeklyPlan?.blogAngle) console.log(`[blog]   weekly-plan angle: ${weeklyPlan.blogAngle}`);
+    const result = await pickTopic(config, { existingTitles: titles, weekNumber, locale: config.project.locale, weeklyPlan });
     topic = result.topic;
     console.log(`[blog]   → ${topic.title}`);
     fs.writeFileSync(path.join(dir, "topic.json"), JSON.stringify({ topic, citations: result.citations }, null, 2), "utf8");

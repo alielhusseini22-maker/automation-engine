@@ -1,4 +1,4 @@
-name: Content Ideas — Weekly Sunday 9h
+name: Weekly Plan — Sunday 9h (pilote le contenu auto de la semaine)
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
         default: "poils-precieux"
 
 jobs:
-  ideas:
+  plan:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -26,17 +26,25 @@ jobs:
 
       - run: npm install
 
-      - name: Generate content ideas
+      - name: Generate weekly strategy plan
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
           PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
-        run: node commands/content-ideas.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
+        run: node commands/weekly-plan.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
 
-      - name: Upload brief as artifact
+      - name: Commit weekly-plan.json (lu par social + blog)
+        run: |
+          git config user.name "automation-bot"
+          git config user.email "bot@automation-engine.local"
+          git add projects/*/weekly-plan.json
+          git commit -m "weekly-plan: $(date +%Y-%m-%d)" || echo "Nothing to commit"
+          git push || echo "Nothing to push"
+
+      - name: Upload readable plan as artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: content-brief-${{ github.run_id }}
-          path: runs/poils-precieux/content-ideas/
+          name: weekly-plan-${{ github.run_id }}
+          path: runs/poils-precieux/weekly-plan/
           retention-days: 90
