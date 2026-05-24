@@ -1,0 +1,41 @@
+name: Product Onboarding — auto polish + images (every 4h)
+
+on:
+  schedule:
+    # Toutes les 4h (à :13 pour éviter le top-of-hour). Traite les produits tagués
+    # 'nouveau-produit' sans 'auto-onboarded'. Exit rapide si rien à faire.
+    - cron: "13 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project ID"
+        required: true
+        default: "poils-precieux"
+
+jobs:
+  onboarding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - name: Onboard new products (polish + images)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POILS_PRECIEUX_SHOPIFY_TOKEN: ${{ secrets.POILS_PRECIEUX_SHOPIFY_TOKEN }}
+          PROJECT: ${{ github.event.inputs.project || 'poils-precieux' }}
+        run: node commands/product-onboarding.js --project "${{ github.event.inputs.project || 'poils-precieux' }}"
+
+      - name: Upload onboarding log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-${{ github.run_id }}
+          path: runs/poils-precieux/onboarding/
+          retention-days: 30

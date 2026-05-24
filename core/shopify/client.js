@@ -186,6 +186,138 @@ export async function uploadVideoToShopifyFiles(config, { buffer, filename, mime
   throw new Error(`Shopify video processing timeout (>${maxWaitMs / 1000}s)`);
 }
 
+/**
+ * Liste les produits matchant une query, avec variants + options + media (pour régénération images).
+ */
+export async function listProductsForImages(config, { searchQuery = "status:ACTIVE", limit = 50 } = {}) {
+  const out = [];
+  let cursor = null;
+  while (true) {
+    const data = await shopifyQuery(
+      config,
+      `query($cursor: String, $q: String) {
+        products(first: 25, after: $cursor, query: $q, sortKey: CREATED_AT, reverse: true) {
+          edges { node {
+            id title handle status productType tags
+            options { id name values }
+            media(first: 30) { edges { node { ... on MediaImage { id image { url } } } } }
+            variants(first: 100) { edges { node {
+              id title
+              selectedOptions { name value }
+              image { id url }
+            } } }
+          } }
+          pageInfo { hasNextPage endCursor }
+        }
+      }`,
+      { cursor, q: searchQuery }
+    );
+    for (const e of data.products.edges) {
+      const mediaNodes = e.node.media.edges.map((m) => m.node).filter((n) => n?.image?.url);
+      out.push({
+        id: e.node.id,
+        title: e.node.title,
+        handle: e.node.handle,
+        productType: e.node.productType,
+        tags: e.node.tags,
+        options: e.node.options || [],
+        variants: e.node.variants.edges.map((v) => ({
+          id: v.node.id,
+          title: v.node.title,
+          selectedOptions: v.node.selectedOptions || [],
+          imageUrl: v.node.image?.url || null,
+        })),
+        mediaIds: mediaNodes.map((n) => n.id),
+        mediaUrls: mediaNodes.map((n) => n.image.url),
+      });
+      if (out.length >= limit) return out;
+    }
+    if (!data.products.pageInfo.hasNextPage) break;
+    cursor = data.products.pageInfo.endCursor;
+  }
+  return out;
+}
+
+/**
+ * Attache une image (buffer PNG) à un produit : staged upload → productCreateMedia.
+ * Retourne { mediaId, imageUrl }.
+ */
+export async function attachImageBuffer(config, { productId, buffer, filename, altText = "" }) {
+  const resourceUrl = await uploadImageBuffer(config, { buffer, filename, mimeType: "image/png" });
+  const data = await shopifyQuery(
+    config,
+    `mutation($id: ID!, $media: [CreateMediaInput!]!) {
+      productCreateMedia(productId: $id, media: $media) {
+        media { ... on MediaImage { id image { url } } }
+        mediaUserErrors { field message }
+      }
+    }`,
+    { id: productId, media: [{ originalSource: resourceUrl, mediaContentType: "IMAGE", alt: altText }] }
+  );
+  const errors = data.productCreateMedia.mediaUserErrors;
+  if (errors?.length) throw new Error(`productCreateMedia: ${JSON.stringify(errors)}`);
+  const media = data.productCreateMedia.media?.[0];
+  return { mediaId: media?.id || null, imageUrl: media?.image?.url || null };
+}
+
+/**
+ * Lie une image média à plusieurs variantes.
+ */
+export async function linkMediaToVariants(config, { productId, variantIds, mediaId }) {
+  if (!variantIds?.length || !mediaId) return [];
+  const data = await shopifyQuery(
+    config,
+    `mutation($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+        productVariants { id }
+        userErrors { field message }
+      }
+    }`,
+    { productId, variants: variantIds.map((id) => ({ id, mediaId })) }
+  );
+  const errors = data.productVariantsBulkUpdate.userErrors;
+  if (errors?.length) throw new Error(`linkMediaToVariants: ${JSON.stringify(errors)}`);
+  return data.productVariantsBulkUpdate.productVariants;
+}
+
+/**
+ * Supprime des médias d'un produit.
+ */
+export async function deleteProductMedia(config, { productId, mediaIds }) {
+  if (!mediaIds?.length) return [];
+  const data = await shopifyQuery(
+    config,
+    `mutation($id: ID!, $mediaIds: [ID!]!) {
+      productDeleteMedia(productId: $id, mediaIds: $mediaIds) {
+        deletedMediaIds
+        mediaUserErrors { field message }
+      }
+    }`,
+    { id: productId, mediaIds }
+  );
+  const errors = data.productDeleteMedia.mediaUserErrors;
+  if (errors?.length) throw new Error(`productDeleteMedia: ${JSON.stringify(errors)}`);
+  return data.productDeleteMedia.deletedMediaIds;
+}
+
+/**
+ * Ajoute un tag à un produit (merge avec les tags existants via tagsAdd).
+ */
+export async function addProductTag(config, productId, tag) {
+  const data = await shopifyQuery(
+    config,
+    `mutation($id: ID!, $tags: [String!]!) {
+      tagsAdd(id: $id, tags: $tags) {
+        userErrors { field message }
+      }
+    }`,
+    { id: productId, tags: [tag] }
+  );
+  const errors = data.tagsAdd.userErrors;
+  if (errors?.length) throw new Error(`tagsAdd: ${JSON.stringify(errors)}`);
+  return true;
+}
+
 export async function createArticle(config, { blogId, title, body, summary, imageUrl, imageAlt, tags = [], handle, isPublished = true, authorName }) {
   const name = authorName || config.blog?.author || "Équipe Poils Précieux";
   const data = await shopifyQuery(
