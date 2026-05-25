@@ -11,21 +11,23 @@
     "v-34508555"
   ],
   "products": [
+    "harnais-reflechissant-walky",
     "distributeur-canard-quacky",
     "brosse-demelante-marley",
     "lit-rond-cocoony",
     "veste-polar-hiver"
   ],
   "music": [
+    "warm-acoustic-2.mp3",
     "warm-folk-1.mp3",
     "warm-folk-2.mp3",
     "calm-piano-2.mp3",
     "warm-acoustic-1.mp3"
   ],
   "concepts": [
+    "product-highlight",
     "relatable",
     "astuce",
-    "emotion",
-    "product-highlight"
+    "emotion"
   ]
 }
