@@ -18,7 +18,7 @@ export async function fetchProductForPolish(config, productId) {
         id title handle descriptionHtml productType tags
         options { id name optionValues { id name } }
         variants(first: 100) {
-          nodes { id title price inventoryQuantity selectedOptions { name value } }
+          nodes { id title price inventoryQuantity selectedOptions { name value } inventoryItem { unitCost { amount } } }
         }
       }
     }`,
@@ -197,9 +197,10 @@ export async function generateProductPolishAI(config, product, { collectionTitle
     values: (o.optionValues || []).map((v) => v.name),
   }));
 
-  // À l'import DSERS, le prix variante = coût d'achat → base pour le pricing marché.
+  // Coût d'achat réel = inventoryItem.unitCost (posé par DSERS, fiable même APRÈS polish).
+  // Fallback : variant.price (vrai uniquement à l'import frais, avant que le polish ne fixe le prix de vente).
   const costs = (product.variants?.nodes || [])
-    .map((v) => parseFloat(v.price))
+    .map((v) => parseFloat(v.inventoryItem?.unitCost?.amount ?? v.price))
     .filter((n) => !Number.isNaN(n) && n > 0);
   const costMin = costs.length ? Math.min(...costs) : null;
   const costMax = costs.length ? Math.max(...costs) : null;
@@ -346,9 +347,14 @@ export async function applyAIPolish(config, product, aiPlan, { collections = [],
     log.push(`élagage ignoré (supprimerait toutes les ${variants.length} variantes)`);
   }
 
-  // 1b. Prix marché (marge modeste) sur les variantes conservées
-  if (aiPlan.priceEUR != null) {
-    const costMax = Math.max(0, ...variants.map((v) => parseFloat(v.price) || 0));
+  // 1b. Prix marché (marge modeste) sur les variantes conservées.
+  // Garde-fou anti-doublement : on ne (re)fixe le prix QUE sur un produit fraîchement importé.
+  // Un produit déjà "auto-onboarded" a déjà son prix de vente ; le re-polir prendrait ce prix
+  // de vente pour un coût d'achat et le doublerait. On préserve donc le prix existant.
+  const alreadyOnboarded = (product.tags || []).includes("auto-onboarded");
+  if (aiPlan.priceEUR != null && !alreadyOnboarded) {
+    // Coût réel = inventoryItem.unitCost (DSERS), fallback variant.price (import frais)
+    const costMax = Math.max(0, ...variants.map((v) => parseFloat(v.inventoryItem?.unitCost?.amount ?? v.price) || 0));
     let price = Number(aiPlan.priceEUR);
     if (!Number.isFinite(price) || price <= 0) price = costMax > 0 ? costMax * 2.2 : 0;
     // Plancher de viabilité : jamais sous 2× le coût le plus élevé
