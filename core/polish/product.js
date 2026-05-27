@@ -232,6 +232,8 @@ Réponds en JSON strict :
   "category": "toilettage",
   "collections": ["Toilettage & Hygiène", "Pour chien"],
   "priceEUR": 14.90,
+  "seoTitle": "Type de produit + mot-clé + Mascotte™ + chien/chat | Poils Précieux",
+  "seoDescription": "Bénéfice concret + caractéristique clé + prix + réassurance, 140-155 caractères, sans émoji",
   "options": [
     { "name": "Couleur", "values": [ { "from": "with connect Black", "to": "Noir", "keep": true }, { "from": "Jaune", "to": "Jaune", "keep": false } ] }
   ]
@@ -244,6 +246,8 @@ Consignes :
 - category : une seule parmi chien, chat, toilettage, alimentation, couchage, balade, jeu.
 - collections : 1 à 3 parmi les collections disponibles ci-dessus. TOUJOURS l'audience (Pour chien et/ou Pour chat) + la collection fonctionnelle correspondante.
 - priceEUR : prix de vente UNIQUE (appliqué à toutes les variantes), aligné sur le PRIX DU MARCHÉ FRANÇAIS pour ce type de produit. Marge MODESTE : la marque est nouvelle et inconnue, donc rester compétitif et ne PAS être gourmand. Plancher : au moins 2× le coût d'achat le plus élevé (${costMax != null ? `soit ≥ ${(costMax * 2).toFixed(2)}€` : "viabilité pub"}). Terminaison en .90 (ex: 14.90, 24.90).
+- seoTitle : balise titre SEO de 50 à 60 caractères, format "[type de produit + mot-clé recherché] [Mascotte]™ [chien et/ou chat] | Poils Précieux" (ex: "Brosse démêlante chien poils longs Marley™ | Poils Précieux"). Place en tête le mot-clé qu'un client taperait dans Google.
+- seoDescription : méta-description SEO de 140 à 155 caractères, sans émoji : bénéfice concret + caractéristique clé + prix (ex: "24,90€") + une réassurance ("Livraison offerte France"). Donne envie de cliquer, reste honnête (aucune promesse ni stat inventée).
 - options/values : "from" = valeur brute EXACTE (pour le matching). "to" = label FR épuré (enlève codes matière/techniques : "300ml-PET"→"300ml", "with connect Black"→"Noir" ; traduis et capitalise).
 - "keep": false pour doublons, valeurs parasites ("(old)", "（old）", vides) et coloris superflus : garde AU MAXIMUM ${maxColors} coloris en privilégiant les neutres (noir, blanc, gris, beige, vert sauge, bleu marine) et en écartant les coloris flashy/fluo. Garde TOUJOURS au moins une valeur par option et conserve les tailles utiles (S/M/L/XL, ml).`;
 
@@ -397,8 +401,12 @@ export async function applyAIPolish(config, product, aiPlan, { collections = [],
   }
 
   // 3. Titre + description FR
-  if (aiPlan.title || aiPlan.descriptionHtml) {
-    log.push(`titre + description FR`);
+  const seoInput = {};
+  if (aiPlan.seoTitle) seoInput.title = aiPlan.seoTitle;
+  if (aiPlan.seoDescription) seoInput.description = aiPlan.seoDescription;
+  const hasSeo = Object.keys(seoInput).length > 0;
+  if (aiPlan.title || aiPlan.descriptionHtml || hasSeo) {
+    log.push(`titre + description FR${hasSeo ? " + méta SEO" : ""}`);
     if (!dryRun) {
       await shopifyQuery(
         config,
@@ -410,6 +418,7 @@ export async function applyAIPolish(config, product, aiPlan, { collections = [],
             id: productId,
             ...(aiPlan.title ? { title: aiPlan.title } : {}),
             ...(aiPlan.descriptionHtml ? { descriptionHtml: aiPlan.descriptionHtml } : {}),
+            ...(hasSeo ? { seo: seoInput } : {}),
           },
         }
       );
