@@ -79,6 +79,7 @@ Hard rules (must all be met):
 - Wholesale price between $${rules.minPriceUSD}-$${rules.maxPriceUSD}
 - Suitable for shipping to France
 - Not requiring subscription (no food/meds)
+- NO VISIBLE THIRD-PARTY BRAND on the product itself, its screen-print/engraving, or its packaging. We sell white-label as Poils Précieux, so any unit showing another brand's name or logo is DISQUALIFIED — always prefer plain/unbranded versions of the same product.
 
 CRITICAL — NO DUPLICATES: The brand ALREADY SELLS these products. You must NOT propose anything that is the same product type or serves the same function. Propose only genuinely NEW products that fill gaps in the catalog.
 
