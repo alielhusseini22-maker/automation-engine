@@ -14,6 +14,7 @@
     "v-34508555"
   ],
   "products": [
+    "gourde-voyage-sippy",
     "coussin-chauffant-cuddly",
     "sac-dos-pliable-carrio",
     "batonnets-matatabi-toothy",
@@ -27,16 +28,16 @@
     "veste-polar-hiver"
   ],
   "music": [
+    "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-1.mp3",
     "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
-    "warm-folk-2.mp3",
     "calm-piano-2.mp3"
   ],
   "concepts": [
-    "emotion",
     "product-highlight",
+    "emotion",
     "relatable",
     "astuce"
   ]
