@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-6131052",
+    "v-7279105",
+    "v-10484823",
     "v-36023817",
     "v-6568964",
     "v-35247531",
@@ -11,6 +14,7 @@
     "v-34508555"
   ],
   "products": [
+    "coussin-chauffant-cuddly",
     "sac-dos-pliable-carrio",
     "batonnets-matatabi-toothy",
     "tag-gps-trackr",
@@ -23,6 +27,7 @@
     "veste-polar-hiver"
   ],
   "music": [
+    "calm-piano-1.mp3",
     "warm-acoustic-1.mp3",
     "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
@@ -30,9 +35,9 @@
     "calm-piano-2.mp3"
   ],
   "concepts": [
+    "emotion",
     "product-highlight",
     "relatable",
-    "astuce",
-    "emotion"
+    "astuce"
   ]
 }
