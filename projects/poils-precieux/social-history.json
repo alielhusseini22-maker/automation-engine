@@ -17,6 +17,7 @@
     "v-34508555"
   ],
   "products": [
+    "brosse-dents-doigtier-fingo",
     "ciseaux-toilettage-snippy",
     "gourde-voyage-sippy",
     "coussin-chauffant-cuddly",
@@ -32,16 +33,16 @@
     "veste-polar-hiver"
   ],
   "music": [
+    "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-1.mp3",
-    "warm-folk-1.mp3",
     "calm-piano-2.mp3"
   ],
   "concepts": [
-    "astuce",
     "product-highlight",
+    "astuce",
     "emotion",
     "relatable"
   ]
