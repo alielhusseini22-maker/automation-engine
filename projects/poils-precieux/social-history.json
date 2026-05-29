@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-6131045",
+    "v-6132702",
+    "v-6131502",
     "v-6131052",
     "v-7279105",
     "v-10484823",
@@ -14,6 +17,7 @@
     "v-34508555"
   ],
   "products": [
+    "ciseaux-toilettage-snippy",
     "gourde-voyage-sippy",
     "coussin-chauffant-cuddly",
     "sac-dos-pliable-carrio",
@@ -28,17 +32,17 @@
     "veste-polar-hiver"
   ],
   "music": [
+    "warm-acoustic-2.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-1.mp3",
     "warm-folk-1.mp3",
-    "warm-acoustic-2.mp3",
     "calm-piano-2.mp3"
   ],
   "concepts": [
+    "astuce",
     "product-highlight",
     "emotion",
-    "relatable",
-    "astuce"
+    "relatable"
   ]
 }
