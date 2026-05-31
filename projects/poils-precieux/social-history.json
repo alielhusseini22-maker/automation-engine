@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-34689563",
+    "v-36215085",
+    "v-29759796",
     "v-6131045",
     "v-6132702",
     "v-6131502",
@@ -17,6 +20,7 @@
     "v-34508555"
   ],
   "products": [
+    "peignoir-sechant-robie",
     "tag-gps-trackr",
     "lit-rond-cocoony",
     "detartreur-brilly",
@@ -30,21 +34,20 @@
     "batonnets-matatabi-toothy",
     "fontaine-eau-led-aqualy",
     "gant-toilettage-pawsky",
-    "harnais-reflechissant-walky",
-    "distributeur-canard-quacky"
+    "harnais-reflechissant-walky"
   ],
   "music": [
+    "intimate-lofi-1.mp3",
     "warm-acoustic-2.mp3",
     "warm-folk-2.mp3",
     "warm-folk-1.mp3",
     "warm-acoustic-1.mp3",
-    "calm-piano-1.mp3",
-    "calm-piano-2.mp3"
+    "calm-piano-1.mp3"
   ],
   "concepts": [
+    "relatable",
     "product-highlight",
     "astuce",
-    "emotion",
-    "relatable"
+    "emotion"
   ]
 }
