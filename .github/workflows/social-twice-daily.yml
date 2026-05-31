@@ -43,13 +43,24 @@ jobs:
       - name: Determine slot from cron schedule
         id: slot
         run: |
-          hour=$(date -u +"%H")
+          # On se base sur le CRON qui a déclenché (github.event.schedule), pas sur l'heure
+          # au moment du run : GitHub Actions retarde régulièrement les schedule de 1 à 3h,
+          # ce qui faisait basculer le cron midi en "evening" quand il arrivait après 14h UTC.
           if [ -n "${{ github.event.inputs.slot }}" ]; then
             echo "value=${{ github.event.inputs.slot }}" >> $GITHUB_OUTPUT
-          elif [ "$hour" -lt "14" ]; then
+          elif [ "${{ github.event.schedule }}" = "17 12 * * *" ]; then
             echo "value=midday" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ github.event.schedule }}" = "17 17 * * *" ]; then
             echo "value=evening" >> $GITHUB_OUTPUT
+          else
+            # Fallback (dispatch manuel sans --slot, ou trigger inattendu) : choix par heure UTC,
+            # fenêtre élargie à 15h pour absorber des retards modérés sur un éventuel dispatch.
+            hour=$(date -u +"%H")
+            if [ "$hour" -lt "15" ]; then
+              echo "value=midday" >> $GITHUB_OUTPUT
+            else
+              echo "value=evening" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Run social post generation

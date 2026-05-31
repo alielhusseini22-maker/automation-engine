@@ -67,16 +67,6 @@ async function main() {
   const dayName = DAY_NAMES[new Date().getDay()];
   console.log(`[social] project=${config.project.id} slot=${slot} day=${dayName}`);
 
-  // Skip ponctuel du montage AUTO de midi les 25-27/05 : 3 montages déjà publiés manuellement
-  // à midi ces jours-là → on évite le doublon. L'auto reprend normalement le 28/05.
-  // Auto-nettoyant : une fois ces dates passées, la garde ne matche plus (peut être retirée après le 28).
-  const MIDDAY_SKIP_DATES = ["2026-05-25", "2026-05-26", "2026-05-27"];
-  const todayISO = new Date().toISOString().slice(0, 10);
-  if (slot === "midday" && MIDDAY_SKIP_DATES.includes(todayISO)) {
-    console.log(`[social] midday auto-montage SKIPPED for ${todayISO} (montage manuel déjà programmé). Exit.`);
-    return;
-  }
-
   // Step 1 — générer le designed post (template + content + rendu PNG)
   console.log(`[social] Step 1/3 — generating designed post`);
   const post = await generateDesignedPost(config, dir, { slot, dayName });
