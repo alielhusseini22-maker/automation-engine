@@ -14,6 +14,8 @@ import { pickMusicTrack, moodForContext } from "../design/music.js";
 import { loadWeeklyPlan } from "../strategy/weekly-plan.js";
 import { recentVideoIds, recentProducts, recentMusic } from "./history.js";
 import { generateMontageVideo } from "./montage.js";
+import { generateHumorVideo } from "./humor.js";
+import { generateMadameVideo } from "./madame.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -23,10 +25,12 @@ import { generateMontageVideo } from "./montage.js";
  * @param {string} runDir - dossier de sortie
  * @returns {{ mediaPaths: string[], format: "carousel"|"single", brief: object, content: object }}
  */
-export async function generateDesignedPost(config, runDir, { slot, dayName }) {
-  // Choisit le type de template
-  const templateType = pickTemplate(slot, dayName);
-  console.log(`[design] template = ${templateType} (${slot}, ${dayName})`);
+export async function generateDesignedPost(config, runDir, { templateType, slot, dayName } = {}) {
+  // Nouveau chemin : templateType passé directement par le cycle (J1/J2/J3) dans social.js.
+  // Rétro-compat : si non fourni, on retombe sur l'ancien pickTemplate(slot) — utile pour les
+  // scripts ad-hoc qui invoquent encore avec --slot.
+  if (!templateType) templateType = pickTemplate(slot);
+  console.log(`[design] template = ${templateType}${dayName ? ` (${dayName})` : ""}`);
 
   if (templateType === "hook-carousel") {
     return await generateHookCarousel(config, runDir);
@@ -41,13 +45,39 @@ export async function generateDesignedPost(config, runDir, { slot, dayName }) {
     return await generatePexelsVideo(config, runDir);
   }
   if (templateType === "montage") {
-    // Montage multi-clips branded (concept émotion/astuce/relatable) + carte produit de fin.
+    // J1 — Montage multi-clips branded (concept émotion/astuce/relatable) + carte produit de fin.
     // Fallback résilient vers pexels-video si le montage échoue (ex: <2 clips frais trouvés).
     try {
       return await generateMontageVideo(config, runDir, {});
     } catch (err) {
       console.log(`[design] ⚠ montage failed (${err.message}) → fallback pexels-video`);
       return await generatePexelsVideo(config, runDir);
+    }
+  }
+  if (templateType === "humor") {
+    // J2 — Humour 1 clip Pexels + texte viral ≤7 mots + sting wordmark.
+    // Fallback résilient vers pexels-video si humor échoue (ex: toutes les queries humour épuisées).
+    try {
+      return await generateHumorVideo(config, runDir);
+    } catch (err) {
+      console.log(`[design] ⚠ humor failed (${err.message}) → fallback pexels-video`);
+      return await generatePexelsVideo(config, runDir);
+    }
+  }
+  if (templateType === "madame") {
+    // J3 — Format signature mascotte. Tant que la librairie Madame (clips IA + motif 3 notes)
+    // n'est pas générée, on retombe proprement sur "humor" pour ne pas sauter un jour de cycle.
+    // Si humor échoue à son tour → fallback pexels-video via le bloc humor ci-dessus.
+    try {
+      return await generateMadameVideo(config, runDir);
+    } catch (err) {
+      console.log(`[design] ⚠ madame non prêt (${err.message}) → fallback humor`);
+      try {
+        return await generateHumorVideo(config, runDir);
+      } catch (err2) {
+        console.log(`[design] ⚠ humor a échoué aussi (${err2.message}) → fallback pexels-video`);
+        return await generatePexelsVideo(config, runDir);
+      }
     }
   }
   throw new Error(`Unknown template type: ${templateType}`);

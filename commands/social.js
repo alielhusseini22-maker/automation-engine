@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // Génère + schedule un post social — version "designed posts" (no more bad videos).
 //
-// 2 posts/jour :
-//   - midday (midi)   → montage vidéo branded (concept tournant + carte produit)
-//   - evening (soir)  → product-highlight (vraie photo produit + CTA)
+// 1 vidéo/jour, cycle 4 jours (modulo CYCLE_START_ISO) :
+//   - J1 (jour 0) → montage émotion/produit (générateur "montage")
+//   - J2 (jour 1) → humour 1 clip réel + texte viral ≤7 mots ("humor")
+//   - J3 (jour 2) → "L'avis de Madame", format signature mascotte ("madame")
+//   - jour 3      → PAUSE (aucun post)
 //
-// Si --slot fourni explicitement, on l'utilise. Sinon on déduit de l'heure courante.
+// Si --day-type fourni explicitement (j1|j2|j3|pause), on l'utilise. Sinon on calcule
+// la position dans le cycle 4 jours depuis CYCLE_START_ISO.
 //
 // Usage :
-//   node commands/social.js --project poils-precieux              (auto slot selon heure)
-//   node commands/social.js --project poils-precieux --slot evening
-//   node commands/social.js --project poils-precieux --slot morning --dry-run
+//   node commands/social.js --project poils-precieux                    (auto cycle)
+//   node commands/social.js --project poils-precieux --day-type j2
+//   node commands/social.js --project poils-precieux --day-type j1 --dry-run
 
 import "dotenv/config";
 import fs from "node:fs";
@@ -28,24 +31,20 @@ import { recordSocialUsage, recentMusic } from "../core/social/history.js";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
-function detectSlot(date = new Date()) {
-  const h = date.getHours();
-  if (h < 16) return "midday";    // jusqu'à 16h → midday (14h schedule)
-  return "evening";                // 16h+ → evening (19h schedule)
+// Ancre du cycle 4 jours J1/J2/J3/PAUSE. Modifier cette date pour réaligner le calendrier.
+const CYCLE_START_ISO = "2026-06-01"; // ce jour-là = J1 (jour 0 du cycle)
+const CYCLE = ["j1", "j2", "j3", "pause"];
+
+function dayTypeForDate(date = new Date()) {
+  const startMs = Date.parse(`${CYCLE_START_ISO}T00:00:00Z`);
+  const nowMs = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const daysSinceStart = Math.floor((nowMs - startMs) / 86400000);
+  const pos = ((daysSinceStart % 4) + 4) % 4; // gère le cas où date < CYCLE_START
+  return CYCLE[pos];
 }
 
-function scheduleTimeForSlot(slot, baseDate = new Date()) {
-  const target = new Date(baseDate);
-  if (slot === "morning") {
-    target.setHours(10, 0, 0, 0);
-  } else if (slot === "midday") {
-    target.setHours(14, 0, 0, 0);
-  } else {
-    target.setHours(19, 0, 0, 0);
-  }
-  if (target <= baseDate) target.setDate(target.getDate() + 1);
-  return target;
-}
+// Mapping type de jour → template à exécuter.
+const TEMPLATE_FOR_DAY = { j1: "montage", j2: "humor", j3: "madame" };
 
 async function uploadAllSlides(config, mediaPaths) {
   const urls = [];
@@ -63,18 +62,26 @@ async function main() {
   const config = loadProject(args.project);
   const dir = runDir(config, "social");
 
-  const slot = args.slot || detectSlot();
+  const dayType = args.dayType || dayTypeForDate();
   const dayName = DAY_NAMES[new Date().getDay()];
-  console.log(`[social] project=${config.project.id} slot=${slot} day=${dayName}`);
+  console.log(`[social] project=${config.project.id} cycle=${dayType} (${dayName})`);
 
-  // Step 1 — générer le designed post (template + content + rendu PNG)
-  console.log(`[social] Step 1/3 — generating designed post`);
-  const post = await generateDesignedPost(config, dir, { slot, dayName });
+  if (dayType === "pause") {
+    console.log(`[social] PAUSE day — aucun post aujourd'hui (cycle 3+1). Sortie.`);
+    return;
+  }
+
+  const templateType = TEMPLATE_FOR_DAY[dayType];
+  if (!templateType) throw new Error(`Type de jour inconnu : ${dayType} (attendu j1|j2|j3|pause)`);
+
+  // Step 1 — générer le designed post (template + content + rendu)
+  console.log(`[social] Step 1/3 — generating ${templateType}`);
+  const post = await generateDesignedPost(config, dir, { templateType, dayName });
   console.log(`[social]   ✓ ${post.mediaPaths.length} slide(s) rendered → ${post.format}`);
 
   // Save content metadata
   fs.writeFileSync(path.join(dir, "content.json"), JSON.stringify({
-    slot, dayName,
+    dayType, dayName,
     format: post.format,
     brief: post.brief,
     content: post.content,
@@ -157,7 +164,8 @@ async function main() {
     if (tiktokTarget && ffmpegOk) {
       console.log(`[social] Step 3/4 — animating carousel into MP4 for TikTok`);
       try {
-        const mood = moodForContext({ slot, templateType: post.brief.templateType });
+        // moodForContext n'utilise que templateType depuis le passage au cycle 4 jours.
+        const mood = moodForContext({ templateType: post.brief.templateType });
         const audioPath = pickMusicTrack({ mood, exclude: recentMusic(config) });
         if (audioPath) usedMusic = path.basename(audioPath);
         console.log(`  music: ${audioPath ? path.basename(audioPath) : "(no track found, silent video)"}`);
@@ -189,10 +197,12 @@ async function main() {
   }
 
   // Step 4 — schedule via Buffer (asset différencié par plateforme)
-  const scheduledAt = scheduleTimeForSlot(slot);
+  // Publication quasi-immédiate (cron du jour = post du jour). Buffer exige dueAt > now ;
+  // on garde 10 min de marge pour absorber le temps de génération + traitement Buffer.
+  const scheduledAt = new Date(Date.now() + 10 * 60 * 1000);
   const manifest = {
     timestamp: new Date().toISOString(),
-    slot,
+    dayType,
     dayName,
     format: post.format,
     brief: post.brief,
@@ -270,7 +280,8 @@ async function main() {
       recordSocialUsage(config, { videoId: cid });
     }
     recordSocialUsage(config, {
-      videoId: post.brief?.pexelsVideo?.id || null,
+      // pexels-video → brief.pexelsVideo.id ; humor → brief.clipId ; montage → déjà loopé ci-dessus
+      videoId: post.brief?.pexelsVideo?.id || post.brief?.clipId || null,
       productHandle: post.brief?.product?.handle || post.brief?.outroProduct?.handle || null,
       music: usedMusic,
       // montage → brief.concept (emotion|astuce|relatable) ; designed posts → templateType

@@ -232,26 +232,55 @@ ${productCandidates.map((p) => `- handle:${p.handle} | ${p.title} | ${p.productT
 
   // 4. Claude génère les textes à l'écran (1 ligne + sub optionnel par clip) + la caption + le choix produit
   const { data: content } = await claudeJSON(config, {
-    system: `Tu écris les TEXTES À L'ÉCRAN et la caption d'une vidéo sociale (Reel/TikTok) pour Poils Précieux, marque française premium pour chiens & chats. La vidéo est un MONTAGE de ${clips.length} plans stock réels enchaînés, avec un texte court posé sur chaque plan.
+    system: `Tu écris les TEXTES À L'ÉCRAN et la caption d'un Reel/TikTok pour Poils Précieux (marque française premium chiens & chats). La vidéo est un MONTAGE de ${clips.length} plans stock réels enchaînés. UN texte court posé sur chaque plan. La séquence des textes doit RACONTER quelque chose — un arc loop→twist, pas une liste de constats.
 
-RÈGLES ABSOLUES — JAMAIS enfreindre :
-- ZÉRO émoji nulle part (ni dans les overlays, ni dans la caption, ni dans l'accroche produit). Pas de pictogramme décoratif. C'est ce qui fait premium.
-- Les textes à l'écran sont COURTS : 5 à 7 mots MAXIMUM par ligne (ils s'affichent en gros sur la vidéo). Le sous-titre est optionnel, encore plus court.
-- Caption : pas de "Lien en bio" ni URL (le système ajoute le CTA par plateforme). Pas de hashtags inline (séparés dans captionHashtags).
-- Ne PAS inventer de client, témoignage, ni nom d'animal. Observation universelle uniquement.
-- HONNÊTETÉ : aucune promesse, certification, origine, pourcentage ou statistique inventés nulle part.
-- FRANÇAIS.`,
+RÈGLES DURES (brand, jamais enfreindre) :
+- ZÉRO émoji nulle part (overlays, caption, accroche produit). C'est ce qui fait premium.
+- Lignes overlays : 5-7 mots MAX par ligne. Sub : optionnel, encore plus court.
+- Caption : pas de "Lien en bio" ni URL (le CTA est ajouté par le système). Pas de hashtags inline (séparés dans captionHashtags).
+- Ne JAMAIS inventer client, témoignage, nom d'animal, chiffre produit. Observation universelle uniquement.
+- HONNÊTETÉ : aucune promesse, certification, origine, pourcentage inventés.
+- FRANÇAIS naturel, parlé. Pas de marketing-speak.
+
+LES 5 LOIS DE VIRALITÉ (toutes doivent peser sur les overlays) :
+1. OUVRIR UNE LOOP — le 1er overlay doit faire VOULOIR voir la suite. Exemples : "Regardez sa tête à la 8e seconde.", "Il pense que personne ne voit.", "Trois pas. C'est son record."
+2. SPÉCIFICITÉ BRUTALE — chiffres précis, durées exactes, détails concrets. "47 jours" > "longtemps". "Trois pas" > "pas beaucoup". "11h32" > "le matin".
+3. COURT > BEAU — coupe les conjonctions, coupe les adjectifs flous. Si une phrase tient en 4 mots elle ne doit pas en faire 6. Phrases sèches > phrases polies.
+4. TWIST FINAL — le DERNIER overlay (avant la carte produit) doit RETOURNER / PAYER la tension installée. Exemples : "Ça nous a pris 30 secondes.", "Il dort dedans depuis 47 jours.", "Bah voilà.", "Et c'est tout."
+5. PHRASE À VOLER — au moins UN des overlays doit être une formule mémorable, repostable telle quelle (un viewer doit pouvoir la screenshoter et la balancer à un pote).
+
+EXEMPLES — BONS (✓) vs MAUVAIS (✗) :
+✗ "Les chats aiment la chaleur"              → vide, mou, observation banale
+✓ "Il est sur le radiateur depuis ce matin." → spécifique, image, raconte
+
+✗ "Brossez régulièrement votre chien"        → conseil pub
+✓ "Cinq minutes, deux fois par semaine."     → chiffré, actionnable, à voler
+
+✗ "Notre brosse est efficace"                 → brag, vide
+✓ "Trente secondes. Et voilà."                → spécifique, twist sec
+
+✗ "Un moment de tendresse"                    → cliché poétique
+✓ "Il fait ça tous les soirs à 21h12."        → spécifique chiffré, image
+
+✗ "Quand votre chien aime sa brosse"          → cliché TikTok "Quand…"
+✓ "Sa stratégie : s'asseoir pile dessus."     → ton parlé, exagération drôle`,
     user: `Concept de la vidéo : ${chosen.label}.
 Style attendu des textes à l'écran : ${chosen.textStyle}
 
 Les ${clips.length} plans (dans l'ordre) montrent :
 ${clips.map((c, i) => `${i + 1}. ${c.query}`).join("\n")}${productPromptBlock}
 
-Écris, dans cet ordre :
-- overlays : un tableau de ${clips.length} objets { "line": "...", "sub": "..." | null } — un par plan. "line" = 5-7 mots max, sans émoji, qui colle au plan ET au concept. "sub" = sous-titre court optionnel (ou null). L'ensemble doit se lire comme une mini-narration cohérente sur ${clips.length} plans.
-- captionForPost : caption FR 60-100 mots, sans émoji, sans "Lien en bio". Première phrase courte qui plante le moment. Développe l'observation. Termine par UNE seule accroche d'engagement (question ouverte).
+CONSTRUCTION OBLIGATOIRE de la séquence des overlays :
+- Overlay #1 = OUVRE UNE LOOP (loi 1). Donne envie de regarder le plan 2.
+- Overlays intermédiaires = DÉROULE l'observation, garde la tension, ajoute UN détail spécifique chiffré (loi 2).
+- Dernier overlay AVANT la carte produit = TWIST (loi 4). C'est lui qui paie le contrat ouvert au #1.
+- Au moins UN des overlays = phrase à voler (loi 5).
+
+Écris :
+- overlays : un tableau de ${clips.length} objets { "line": "...", "sub": "..." | null }. Une ligne par plan. 5-7 mots max. L'ensemble doit se lire comme un mini-arc loop→twist cohérent. "sub" reste rare (max 1 sub sur les ${clips.length} plans) — utiliser seulement si la ligne principale a vraiment besoin d'un complément, sinon null.
+- captionForPost : caption FR 60-100 mots, sans émoji, sans "Lien en bio". Première phrase COURTE qui plante la scène (ton parlé, complice). Développe sans diluer. Termine par UNE seule question ouverte d'engagement.
 - captionHashtags : 6-8 hashtags (commence par #poilsprecieux et #poilsprecieuxfr, puis FR pet pertinents au concept).
-- altText : 1 phrase FR décrivant la vidéo.${hasProducts ? "\n- productHandle + outroTagline : choisis le produit le plus pertinent et écris l'accroche de transition (honnête, sans émoji)." : ""}
+- altText : 1 phrase FR décrivant la vidéo.${hasProducts ? "\n- productHandle + outroTagline : choisis le produit le plus pertinent et écris l'accroche de transition (honnête, sans émoji, 4-8 mots)." : ""}
 
 Return JSON :
 {
@@ -260,7 +289,7 @@ Return JSON :
   "captionHashtags": ["#poilsprecieux", "#poilsprecieuxfr", "..."],
   "altText": "..."${productJsonFields}
 }`,
-    maxTokens: 1800,
+    maxTokens: 2000,
   });
 
   const overlays = Array.isArray(content.overlays) ? content.overlays : [];

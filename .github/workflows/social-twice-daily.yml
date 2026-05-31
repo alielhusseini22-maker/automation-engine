@@ -1,19 +1,18 @@
-name: Social — 2 posts/day (midday + evening)
+name: Social — 1 video/day (cycle J1/J2/J3/PAUSE)
 
 on:
   schedule:
-    # Midday ~14h Paris (12h UTC summer) — minute 17 to dodge top-of-hour GH load
+    # 14h Paris CEST (12h UTC summer) — 1 seul post/jour. Cycle J1→J2→J3→PAUSE
+    # géré par commands/social.js (modulo 4 jours depuis CYCLE_START_ISO).
     - cron: "17 12 * * *"
-    # Evening ~19h Paris (17h UTC summer)
-    - cron: "17 17 * * *"
   workflow_dispatch:
     inputs:
       project:
         description: "Project ID"
         required: true
         default: "poils-precieux"
-      slot:
-        description: "Slot (midday|evening), auto si vide"
+      day_type:
+        description: "Force un type de jour (j1|j2|j3|pause), auto sinon"
         required: false
 
 jobs:
@@ -40,30 +39,7 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Determine slot from cron schedule
-        id: slot
-        run: |
-          # On se base sur le CRON qui a déclenché (github.event.schedule), pas sur l'heure
-          # au moment du run : GitHub Actions retarde régulièrement les schedule de 1 à 3h,
-          # ce qui faisait basculer le cron midi en "evening" quand il arrivait après 14h UTC.
-          if [ -n "${{ github.event.inputs.slot }}" ]; then
-            echo "value=${{ github.event.inputs.slot }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.schedule }}" = "17 12 * * *" ]; then
-            echo "value=midday" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.schedule }}" = "17 17 * * *" ]; then
-            echo "value=evening" >> $GITHUB_OUTPUT
-          else
-            # Fallback (dispatch manuel sans --slot, ou trigger inattendu) : choix par heure UTC,
-            # fenêtre élargie à 15h pour absorber des retards modérés sur un éventuel dispatch.
-            hour=$(date -u +"%H")
-            if [ "$hour" -lt "15" ]; then
-              echo "value=midday" >> $GITHUB_OUTPUT
-            else
-              echo "value=evening" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Run social post generation
+      - name: Run social post generation (cycle J1/J2/J3/PAUSE)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -77,7 +53,7 @@ jobs:
         run: |
           node commands/social.js \
             --project "${{ github.event.inputs.project || 'poils-precieux' }}" \
-            --slot "${{ steps.slot.outputs.value }}"
+            ${{ github.event.inputs.day_type && format('--day-type {0}', github.event.inputs.day_type) || '' }}
 
       - name: Persist anti-duplicate history
         if: always()
@@ -97,6 +73,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: social-${{ steps.slot.outputs.value }}-preview-${{ github.run_id }}
+          name: social-preview-${{ github.run_id }}
           path: runs/poils-precieux/social/
           retention-days: 30
