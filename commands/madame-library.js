@@ -234,8 +234,9 @@ async function main() {
   });
   const manifest = {
     referencePath: path.basename(refAbs),
-    promptPrefix: PROMPT_PREFIX,
-    promptSuffix: PROMPT_SUFFIX,
+    // V2.2 : prompts complets self-contained par recette (plus de prefix/suffix communs).
+    personalityFooter: MADAME_PERSONALITY,
+    negativePrompt: MADAME_NEGATIVE_PROMPT,
     resolution: RESOLUTION,
     durationSec: DURATION_SEC,
     aspectRatio: ASPECT_RATIO,

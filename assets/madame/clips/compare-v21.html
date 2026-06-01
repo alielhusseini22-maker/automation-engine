@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Madame V2.1 — Sample 4 clips (sérieux + surpris/étonné)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #0e0e10;
+      color: #f4ede3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 400;
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .ref-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+    .ref {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #18181b;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .ref h2 { margin: 0 0 10px; font-weight: 500; font-size: 14px; }
+    .ref img { width: 200px; height: 200px; object-fit: cover; border-radius: 4px; }
+
+    .row {
+      max-width: 1900px;
+      margin: 0 auto 36px;
+    }
+    .row-label {
+      font-size: 14px;
+      color: #5A6B4F;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .row-label b { color: #f4ede3; font-weight: 500; text-transform: none; letter-spacing: 0.02em; font-size: 17px; display: block; margin-top: 2px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #18181b;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .col h3 {
+      font-weight: 500;
+      font-size: 14px;
+      margin: 0 0 4px;
+      letter-spacing: 0.02em;
+    }
+    .col .meta {
+      color: #888;
+      font-size: 11px;
+      margin-bottom: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .frame {
+      aspect-ratio: 9 / 16;
+      width: 100%;
+      max-width: 380px;
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .verdict {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 22px;
+      background: #1a1f1a;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #c4beb4;
+      line-height: 1.55;
+    }
+    .verdict ol { margin: 8px 0 0; padding-left: 20px; }
+    .verdict li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Madame V2.1 — Sample 4 clips</h1>
+  <div class="sub">Test de 2 expressions universelles, chacune rendue 2× pour vérifier la consistance de Veo</div>
+
+  <div class="ref-row">
+    <div class="ref">
+      <h2>Référence c2 (lock visuel)</h2>
+      <img src="../reference/madame-v1-c2.png">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">Expression 1<b>« Tu es sérieux ?? »</b></div>
+    <div class="grid">
+      <div class="col">
+        <h3>Render A · slot inacceptable-1</h3>
+        <div class="meta">6s · 720p · ~$1.20</div>
+        <div class="frame"><video src="madame-inacceptable-1.mp4" autoplay loop muted playsinline></video></div>
+      </div>
+      <div class="col">
+        <h3>Render B · slot evidemment-1</h3>
+        <div class="meta">6s · 720p · ~$1.20 · MÊME prompt</div>
+        <div class="frame"><video src="madame-evidemment-1.mp4" autoplay loop muted playsinline></video></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">Expression 2<b>« Je suis surpris et étonné »</b></div>
+    <div class="grid">
+      <div class="col">
+        <h3>Render A · slot inacceptable-2</h3>
+        <div class="meta">6s · 720p · ~$1.20</div>
+        <div class="frame"><video src="madame-inacceptable-2.mp4" autoplay loop muted playsinline></video></div>
+      </div>
+      <div class="col">
+        <h3>Render B · slot evidemment-2</h3>
+        <div class="meta">6s · 720p · ~$1.20 · MÊME prompt</div>
+        <div class="frame"><video src="madame-evidemment-2.mp4" autoplay loop muted playsinline></video></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <b>3 critères de validation V2.1 :</b>
+    <ol>
+      <li><b>Lisibilité</b> — un viewer reconnaît-il l'émotion en moins d'une seconde ? Si tu dois "chercher" l'expression, c'est raté.</li>
+      <li><b>Consistance Veo</b> — Render A vs Render B du même prompt : Madame est-elle reconnaissable des deux côtés ? L'expression est-elle similaire ? (si oui = Veo est fiable, on peut batch en confiance)</li>
+      <li><b>Distinction</b> — "Tu es sérieux ??" et "Surpris/étonné" sont-elles VISUELLEMENT distinctes ? (si elles se ressemblent trop, on a un seul "wide-eyes face" générique = problème de palette d'expressions)</li>
+    </ol>
+  </div>
+</body>
+</html>

@@ -1,14 +1,14 @@
 {
   "referencePath": "madame-v1-c2.png",
-  "promptPrefix": "The same Persian cat from the reference image, Madame, ",
-  "promptSuffix": ". Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
+  "personalityFooter": "Madame's personality: a dramatic, elegant, slightly judgmental Persian cat who behaves like a luxury fashion editor. She never panics, never overreacts, never looks silly. Her humor comes from tiny facial movements, slow timing, silent judgment and aristocratic confidence.",
+  "negativePrompt": "cartoon, anime, human face, talking mouth, open mouth, teeth, distorted cat face, deformed eyes, extra ears, extra whiskers, aggressive expression, scary, low quality fur, blurry, shaky camera, fast movement, text, subtitles, watermark, logo, multiple animals, human hands, unrealistic anatomy, overacting, meme face, exaggerated emotion",
   "resolution": "720p",
-  "durationSec": 4,
+  "durationSec": 6,
   "aspectRatio": "9:16",
-  "generatedAt": "2026-06-01T01:01:52.579Z",
-  "totalClips": 7,
+  "generatedAt": "2026-06-01T02:16:45.742Z",
+  "totalClips": 4,
   "clipsByCategory": {
-    "verdict": 7,
+    "verdict": 4,
     "reaction": 0
   },
   "clips": [
@@ -17,56 +17,32 @@
       "key": "evidemment",
       "idx": 1,
       "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, performs a single confident slow blink, chin held high, with a knowing satisfied expression as if the answer was always obvious. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2861593
-    },
-    {
-      "filename": "madame-evidemment-2.mp4",
-      "key": "evidemment",
-      "idx": 2,
-      "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, lifts her chin slightly, gives a brief steady look at the camera, then closes her eyes for a beat in absolute certainty. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2188576
+      "prompt": null,
+      "bytes": null
     },
     {
       "filename": "madame-inacceptable-1.mp4",
       "key": "inacceptable",
       "idx": 1,
       "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, stares directly into the camera with a long unblinking disapproving gaze, then slowly closes her eyes in clear disgust, ears tilting slightly back. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2152965
+      "prompt": null,
+      "bytes": null
     },
     {
-      "filename": "madame-inacceptable-2.mp4",
-      "key": "inacceptable",
-      "idx": 2,
-      "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, turns her head sharply away from the camera with visible disdain, refusing to acknowledge, ears flattening for a brief moment. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2268286
-    },
-    {
-      "filename": "madame-mes-hommages-1.mp4",
-      "key": "mes-hommages",
+      "filename": "madame-surpris-etonne-1.mp4",
+      "key": "surpris-etonne",
       "idx": 1,
       "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, gives a soft warm gaze toward the camera, eyes slowly half-closing in genuine approval, head gently lowering one inch in a small respectful acknowledgement. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2596861
+      "prompt": null,
+      "bytes": null
     },
     {
-      "filename": "madame-mes-hommages-2.mp4",
-      "key": "mes-hommages",
-      "idx": 2,
-      "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, tilts her head graciously to the side, eyes warm and half-closed, in a regal nod of approval. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2536448
-    },
-    {
-      "filename": "madame-passable-1.mp4",
-      "key": "passable",
+      "filename": "madame-tu-es-serieux-1.mp4",
+      "key": "tu-es-serieux",
       "idx": 1,
       "category": "verdict",
-      "prompt": "The same Persian cat from the reference image, Madame, gives a sideways sceptical glance to the camera, one ear slightly back, neutral but visibly unimpressed. Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.",
-      "bytes": 2155537
+      "prompt": null,
+      "bytes": null
     }
   ]
 }

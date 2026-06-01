@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Madame V2.2 — Sample 4 verdicts (snob froid contrôlé)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #0e0e10;
+      color: #f4ede3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 400;
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .ref-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+    .ref {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #18181b;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .ref h2 { margin: 0 0 10px; font-weight: 500; font-size: 14px; }
+    .ref img { width: 200px; height: 200px; object-fit: cover; border-radius: 4px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 1900px;
+      margin: 0 auto 36px;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #18181b;
+      border-radius: 8px;
+      padding: 18px;
+    }
+    .col h3 {
+      font-weight: 500;
+      font-size: 14px;
+      margin: 0 0 4px;
+      letter-spacing: 0.02em;
+    }
+    .col .label {
+      font-family: 'Georgia', serif;
+      font-style: italic;
+      font-size: 18px;
+      color: #5A6B4F;
+      margin: 6px 0 14px;
+      text-align: center;
+    }
+    .frame {
+      aspect-ratio: 9 / 16;
+      width: 100%;
+      max-width: 380px;
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .verdict {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 18px 22px;
+      background: #1a1f1a;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #c4beb4;
+      line-height: 1.55;
+    }
+    .verdict ol { margin: 8px 0 0; padding-left: 20px; }
+    .verdict li { margin-bottom: 6px; }
+    .verdict b { color: #f4ede3; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #2a3a2a;
+      color: #9caf95;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Madame V2.2 — Sample palette 4 verdicts</h1>
+  <div class="sub">Prompts founder · Anna Wintour energy · mouth closed throughout · negative_prompt activé</div>
+
+  <div class="ref-row">
+    <div class="ref">
+      <h2>Référence c2 (lock visuel)</h2>
+      <img src="../reference/madame-v1-c2.png">
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <span class="badge">Verdict 1 · cold disapproval</span>
+      <h3>Inacceptable</h3>
+      <div class="label">"Inacceptable."</div>
+      <div class="frame"><video src="madame-inacceptable-1.mp4" autoplay loop muted playsinline></video></div>
+    </div>
+    <div class="col">
+      <span class="badge">Verdict 2 · smug satisfaction</span>
+      <h3>Évidemment</h3>
+      <div class="label">"Évidemment."</div>
+      <div class="frame"><video src="madame-evidemment-1.mp4" autoplay loop muted playsinline></video></div>
+    </div>
+    <div class="col">
+      <span class="badge">Verdict 3 · skeptical disbelief</span>
+      <h3>Tu es sérieux ??</h3>
+      <div class="label">"Sérieusement ?"</div>
+      <div class="frame"><video src="madame-tu-es-serieux-1.mp4" autoplay loop muted playsinline></video></div>
+    </div>
+    <div class="col">
+      <span class="badge">Verdict 4 · subtle surprise</span>
+      <h3>Surpris / étonné</h3>
+      <div class="label">"Tiens, tiens…"</div>
+      <div class="frame"><video src="madame-surpris-etonne-1.mp4" autoplay loop muted playsinline></video></div>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <b>Critères de validation V2.2 :</b>
+    <ol>
+      <li><b>Bouche fermée</b> — c'était la dérive V2.1 (Madame hurlait). Si le negative_prompt + le "mouth firmly closed" répété ont marché, aucune ouverture de bouche.</li>
+      <li><b>Lisibilité subtile</b> — l'émotion arrive sans drama, en 1-2 secondes. Différent de V1 (trop subtil = illisible) et de V2.1 (trop dramatique = pas snob).</li>
+      <li><b>Distinction</b> — les 4 expressions sont visuellement DIFFÉRENTES les unes des autres ? Si on hésite entre 2, l'une est ratée.</li>
+      <li><b>Lock visuel</b> — Madame reste reconnaissable sur les 4 clips (même chatte que la référence) ?</li>
+      <li><b>Personnalité</b> — sens-tu l'éditrice de mode aristocratique dans le timing / la posture ?</li>
+    </ol>
+  </div>
+</body>
+</html>
