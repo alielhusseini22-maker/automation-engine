@@ -46,12 +46,14 @@ const SETUP_DURATION_SEC = 2.5;
 const CLIP_DURATION_SEC = 6.0;
 const OUTRO_DURATION_SEC = 2.0;
 
-const VERDICT_KEYS = ["inacceptable", "evidemment", "mes-hommages", "passable"];
+// V2.2 — palette pivot vers 4 expressions distinctes (founder direction).
+// Anciennes (mes-hommages, passable) abandonnées pour l'instant — peuvent être rajoutées plus tard.
+const VERDICT_KEYS = ["inacceptable", "evidemment", "tu-es-serieux", "surpris-etonne"];
 const VERDICT_LABELS = {
   inacceptable: "Inacceptable.",
   evidemment: "Évidemment.",
-  "mes-hommages": "Mes hommages.",
-  passable: "Passable.",
+  "tu-es-serieux": "Sérieusement ?",
+  "surpris-etonne": "Tiens, tiens…",
 };
 
 // ─── Compteur / historique persistant ────────────────────────────────────────

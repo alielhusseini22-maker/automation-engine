@@ -30,128 +30,71 @@ import path from "node:path";
 import { loadProject, parseArgs } from "../core/config.js";
 import { hasReplicateToken, generateMadameClipVeo } from "../core/video/madame-clip.js";
 
-// Préfixe commun à TOUS les prompts pour verrouiller le personnage + le style brand.
-// Le [action] varie par recette. Le préfixe garantit cohérence visuelle inter-clips.
-// V2 : suffixe basculé en mode EXPRESSIF (anciennement "minimal motion" qui bridait Veo).
-const PROMPT_PREFIX = "The same Persian cat from the reference image, Madame, ";
-const PROMPT_SUFFIX = ". Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium photoreal magazine quality, expressive anthropomorphic motion, theatrical character animation, clearly readable emotion, no text, no humans visible, no other animals.";
+// V2.2 (founder direction) — prompts COMPLETS self-contained par recette (plus de prefix/suffix).
+// Chaque variant est un prompt Veo complet (setup + action + style). Permet une calibration
+// fine par expression sans contraindre tout le monde au même squelette.
+//
+// MADAME_PERSONALITY = footer commun appendé à chaque prompt → réaffirme à Veo l'esprit du
+// personnage à chaque génération (évite la dérive en cartoon/meme face).
+const MADAME_PERSONALITY = `Madame's personality: a dramatic, elegant, slightly judgmental Persian cat who behaves like a luxury fashion editor. She never panics, never overreacts, never looks silly. Her humor comes from tiny facial movements, slow timing, silent judgment and aristocratic confidence.`;
 
-// Recettes de la librairie V2. count = nombre de variantes du même key (pour rotation côté J3).
-// Chaque action est calibrée pour LISIBILITÉ INSTANTANÉE de l'émotion (test : un viewer doit
-// "lire" le verdict de Madame en 0.5 seconde). Référence mentale : Maggie Smith dans Downton
-// Abbey + énergie d'une comédie virale TikTok. Les "Channeling [...]" guident Veo sur l'intention.
+// Negative prompt commun → blacklist explicite des dérives qu'on a observées V2/V2.1
+// (open mouth, exaggerated emotion, meme face, etc.)
+const MADAME_NEGATIVE_PROMPT = `cartoon, anime, human face, talking mouth, open mouth, teeth, distorted cat face, deformed eyes, extra ears, extra whiskers, aggressive expression, scary, low quality fur, blurry, shaky camera, fast movement, text, subtitles, watermark, logo, multiple animals, human hands, unrealistic anatomy, overacting, meme face, exaggerated emotion`;
+
+// Recettes V2.2 — palette 4 verdicts distincts, 1 variant chacun, prompts complets fournis
+// par le founder (voir docs/brainstorm si on garde une trace). Direction : SNOB FROID CONTRÔLÉ,
+// bouche fermée, mouvements subtils, jamais d'overacting.
+//
+// Anciennes recettes (V1 mes-hommages, passable, 8 réactions) supprimées pour l'instant.
+// On peut les rajouter plus tard si la palette à 4 verdicts est validée.
 const CLIP_RECIPES = [
-  // ── VERDICTS (8 clips : 4 × 2 variantes) ──
-  // V2.1 — prompts révisés sur feedback founder : test 2 expressions UNIVERSELLES
-  // (= lecture instantanée garantie, repostable telles quelles).
-  //   variant 1 = "tu es sérieux ??" → disbelief stupéfait, lecture immédiate
-  //   variant 2 = "je suis surpris et étonné" → wide-eyed wonder, lecture immédiate
-  // Le SAMPLE génère 4 vidéos (2 verdicts × 2 expressions) → on voit si Veo tient ces
-  // 2 expressions avec consistance, puis on dérive le reste de la lib si validé.
   {
     key: "inacceptable",
     category: "verdict",
-    count: 2,
+    count: 1,
     variants: [
-      // Expression "tu es sérieux ??" (skeptical disbelief, "you can't be serious")
-      "stares directly into the camera with a stunned ARE YOU SERIOUS RIGHT NOW expression — eyes pulling wide open in shocked disbelief, head jerking back slightly, mouth dropping open in visible 'you cannot be serious' stupefaction, ears flattening to the side. Holds the look in long-suffering disbelief for a full beat. Theatrical anthropomorphic expression. Channeling someone who has just heard the most absurd thing imaginable",
-      // Expression "je suis surpris et étonné" (wide-eyed astonished wonder)
-      "looks at the camera with a sudden wide-eyed WAIT WHAT expression of genuine astonishment — eyes widening dramatically, mouth slightly opening in stunned surprise, head tilting forward in renewed alert attention, ears perking forward fully. Holds the surprised look for a full beat. Theatrical anthropomorphic expression. Channeling someone receiving an utterly unexpected revelation",
+`Short cinematic close-up video of "Madame", a sophisticated Persian cat mascot for a premium pet grooming brand. Fluffy long cream fur, round expressive face, elegant slightly snobbish attitude, calm aristocratic energy. Static camera, tight close-up on the face and upper chest, soft studio lighting, shallow depth of field, premium clean background.
+
+Madame holds a long unblinking stare of cold disapproval, mouth firmly closed, eyes slightly narrowed. After a short pause, she slowly turns her head to the side with dismissive disgust, ears tilting slightly backward, whiskers barely moving. Her expression feels like silent judgment, as if she has just rejected something completely unacceptable. Channeling Anna Wintour silently rejecting a terrible pitch, but as a Persian cat.
+
+Very subtle movement, elegant timing, funny but refined, no exaggerated cartoon expression, no talking, no text, no camera movement.`,
     ],
   },
   {
     key: "evidemment",
     category: "verdict",
-    count: 2,
+    count: 1,
     variants: [
-      // Même expression "tu es sérieux ??" appliquée au slot evidemment (consistency check)
-      "stares directly into the camera with a stunned ARE YOU SERIOUS RIGHT NOW expression — eyes pulling wide open in shocked disbelief, head jerking back slightly, mouth dropping open in visible 'you cannot be serious' stupefaction, ears flattening to the side. Holds the look in long-suffering disbelief for a full beat. Theatrical anthropomorphic expression. Channeling someone who has just heard the most absurd thing imaginable",
-      // Même expression "surpris et étonné" appliquée au slot evidemment (consistency check)
-      "looks at the camera with a sudden wide-eyed WAIT WHAT expression of genuine astonishment — eyes widening dramatically, mouth slightly opening in stunned surprise, head tilting forward in renewed alert attention, ears perking forward fully. Holds the surprised look for a full beat. Theatrical anthropomorphic expression. Channeling someone receiving an utterly unexpected revelation",
-    ],
-  },
-  {
-    key: "mes-hommages",
-    category: "verdict",
-    count: 2,
-    variants: [
-      "looks at the camera with warm wide eyes of genuine admiration, gives a slow visible nod of deep respect, then closes her eyes savoring excellence. Like a discerning critic finally finding something worth her attention",
-      "softens her expression dramatically, eyes warming and half-closing in genuine approval, then bows her head slowly in a small reverent gesture of respect. Channeling a grand connoisseur recognizing rare quality",
-    ],
-  },
-  {
-    key: "passable",
-    category: "verdict",
-    count: 2,
-    variants: [
-      "slowly turns her head to deliver a long withering side-eye to the camera, mouth pursing slightly, one ear flicking back in dismissal. Theatrical sassy expression. Channeling an unimpressed grand dame mid-tea",
-      "looks the camera up and down slowly with a skeptical assessing gaze, mouth twitching as if suppressing a sigh, then a tiny shrug-like shoulder movement of indifference. Channeling polite but visibly unimpressed evaluation",
-    ],
-  },
+`Short cinematic close-up video of "Madame", a sophisticated Persian cat mascot for a premium pet grooming brand. Fluffy long cream fur, round expressive face, elegant slightly snobbish attitude, calm aristocratic energy. Static camera, tight close-up on the face and upper chest, soft studio lighting, shallow depth of field, premium clean background.
 
-  // ── RÉACTIONS NEUTRES (8 clips × 1 variante) — utilisées en cutaways / set-ups ──
-  {
-    key: "slow-blink",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "performs a single very slow deliberate blink with dramatic timing, eyes closing fully for a full beat then reopening with renewed intensity. Expressive theatrical pause",
+Madame lifts her chin very slightly with a superior, self-satisfied gaze. Her mouth stays firmly closed in a tiny smug expression. She gives one slow confident blink, then a barely perceptible nod, as if the answer was obvious all along. Her face expresses: "Of course. I already knew that." Elegant, calm, aristocratic, quietly hilarious.
+
+Minimal movement, refined timing, premium viral reaction video style, no exaggerated animation, no talking, no text, no camera movement.`,
     ],
   },
   {
-    key: "ear-flick",
-    category: "reaction",
+    key: "tu-es-serieux",
+    category: "verdict",
     count: 1,
     variants: [
-      "flicks one ear sharply in clear annoyance the way someone might roll their eyes, head tilting slightly in dismissal. Expressive anthropomorphic gesture of dismissal",
+`Short cinematic close-up video of "Madame", a sophisticated Persian cat mascot for a premium pet grooming brand. Fluffy long cream fur, round expressive face, elegant slightly snobbish attitude, calm aristocratic energy. Static camera, tight close-up on the face and upper chest, soft studio lighting, shallow depth of field, premium clean background.
+
+Madame slowly narrows her eyes with skeptical disbelief. Her mouth remains firmly closed. She gives a long withering side-eye, then tilts her head slightly, as if silently asking: "Are you serious?" One ear subtly pulls back while the other stays still, creating a dry judgmental expression. The reaction should feel intelligent, sarcastic and quietly brutal, not angry.
+
+Subtle facial acting, slow timing, refined humor, realistic cat anatomy, no exaggerated cartoon expression, no talking, no text, no camera movement.`,
     ],
   },
   {
-    key: "side-eye",
-    category: "reaction",
+    key: "surpris-etonne",
+    category: "verdict",
     count: 1,
     variants: [
-      "snaps her gaze sharply to the side without moving her head, holds a long withering side-eye toward the camera, mouth pursing slightly. Theatrical sassy unimpressed expression",
-    ],
-  },
-  {
-    key: "head-tilt",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "tilts her head sharply and theatrically to the side with wide curious eyes, ears perking forward in clear what-is-this attention. Expressive anthropomorphic curiosity",
-    ],
-  },
-  {
-    key: "yawn",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "opens her mouth wide in an elegant theatrical yawn revealing small white teeth, eyes closing in dramatic boredom, then settles back with composed indifference. Expressive bored aristocratic gesture",
-    ],
-  },
-  {
-    key: "paw-lick",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "lifts one front paw with deliberate elegance, gives it a single delicate but theatrical lick while keeping intense eye contact with the camera, then sets it down with poise. Expressive anthropomorphic grooming",
-    ],
-  },
-  {
-    key: "look-up",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "slowly raises her chin dramatically to gaze upward with serene regality, eyes half-closing in deep philosophical contemplation. Theatrical aristocratic pose",
-    ],
-  },
-  {
-    key: "nose-wrinkle",
-    category: "reaction",
-    count: 1,
-    variants: [
-      "dramatically wrinkles her nose in clear disgust as if detecting something deeply unpleasant in the air, head pulling back slightly with visible offense. Expressive anthropomorphic reaction",
+`Short cinematic close-up video of "Madame", a sophisticated Persian cat mascot for a premium pet grooming brand. Fluffy long cream fur, round expressive face, elegant slightly snobbish attitude, calm aristocratic energy. Static camera, tight close-up on the face and upper chest, soft studio lighting, shallow depth of field, premium clean background.
+
+Madame's eyes widen just slightly in subtle surprise, but she keeps her mouth closed and her dignity intact. Her ears perk forward with renewed curiosity. She tilts her head gently to one side, as if she has just noticed something unexpectedly interesting. The expression should feel like a discerning critic suddenly paying attention, surprised but still elegant and controlled.
+
+Soft subtle movement, charming curiosity, premium viral reaction style, no exaggerated cartoon expression, no talking, no text, no camera movement.`,
     ],
   },
 ];
@@ -170,18 +113,19 @@ if (!VEO_VALID_DURATIONS.includes(DURATION_SEC)) {
 }
 
 function expandRecipes() {
-  // Aplatit les variantes en une liste linéaire d'items {key, idx, action, category}
+  // Aplatit les variantes en une liste linéaire d'items {key, idx, prompt, category}
+  // V2.2 : chaque variant est un prompt COMPLET. On lui append juste MADAME_PERSONALITY
+  // en footer commun pour réaffirmer l'esprit du perso à chaque génération.
   const out = [];
   for (const r of CLIP_RECIPES) {
     for (let i = 0; i < r.count; i++) {
-      const action = r.variants[i];
-      if (!action) throw new Error(`Recette ${r.key} : variante ${i + 1} manquante`);
+      const variant = r.variants[i];
+      if (!variant) throw new Error(`Recette ${r.key} : variante ${i + 1} manquante`);
       out.push({
         key: r.key,
-        idx: i + 1, // 1-indexé pour les noms de fichier
+        idx: i + 1,
         category: r.category,
-        action,
-        prompt: `${PROMPT_PREFIX}${action}${PROMPT_SUFFIX}`,
+        prompt: `${variant.trim()}\n\n${MADAME_PERSONALITY}`,
         filename: `madame-${r.key}-${i + 1}.mp4`,
       });
     }
@@ -246,6 +190,7 @@ async function main() {
     try {
       const r = await generateMadameClipVeo({
         prompt: it.prompt,
+        negativePrompt: MADAME_NEGATIVE_PROMPT,
         refImagePath: refAbs,
         outputPath: it.outPath,
         durationSec: DURATION_SEC,

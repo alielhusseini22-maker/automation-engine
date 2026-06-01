@@ -75,23 +75,24 @@ async function outputToBuffer(output) {
  * @param {string} args.prompt - texte décrivant le mouvement / l'action
  * @param {string} args.refImagePath - chemin local du PNG/JPG de référence (Madame)
  * @param {string} args.outputPath - chemin MP4 de sortie
+ * @param {string} [args.negativePrompt] - liste de ce qu'on NE veut PAS voir (cf MADAME_NEGATIVE_PROMPT)
  * @param {number} [args.durationSec=4] - 4, 6 ou 8
  * @param {"720p"|"1080p"} [args.resolution="720p"]
  * @param {"9:16"|"16:9"} [args.aspectRatio="9:16"]
  * @returns {Promise<{ provider, model, mp4Path, prompt, refImagePath, elapsedSec, bytes, costEstimateUsd }>}
  */
-export async function generateMadameClipVeo({ prompt, refImagePath, outputPath, durationSec = 4, resolution = "720p", aspectRatio = "9:16" }) {
+export async function generateMadameClipVeo({ prompt, refImagePath, outputPath, negativePrompt = null, durationSec = 4, resolution = "720p", aspectRatio = "9:16" }) {
   const c = client();
   const t0 = Date.now();
   const refDataUri = fileToDataUri(refImagePath);
 
-  // Veo 3.1 schema (best-effort, basé sur la doc Replicate octobre 2025) :
+  // Veo 3.1 schema (validé empiriquement) :
   //   - prompt (string)
   //   - reference_images (array of strings, URLs ou data URIs) → mode reference-to-video (notre cas)
+  //   - negative_prompt (string, optional) → liste de ce qu'on évite (open mouth, cartoon, etc.)
   //   - aspect_ratio (string) : "9:16" | "16:9"
-  //   - duration (number) : 4 | 6 | 8
+  //   - duration (number) : 4 | 6 | 8 (autres valeurs = 422)
   //   - resolution (string) : "720p" | "1080p"
-  // Si Replicate rejette un nom de champ, l'erreur le dit explicitement → on adapte ici.
   const input = {
     prompt,
     reference_images: [refDataUri],
@@ -99,6 +100,7 @@ export async function generateMadameClipVeo({ prompt, refImagePath, outputPath, 
     duration: durationSec,
     resolution,
   };
+  if (negativePrompt) input.negative_prompt = negativePrompt;
 
   console.log(`[madame-clip][veo] generating (${durationSec}s, ${resolution}, ${aspectRatio})…`);
   const output = await c.run("google/veo-3.1", { input });
