@@ -39,11 +39,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIPS_DIR = path.join(__dirname, "..", "..", "assets", "madame", "clips");
 const AUDIO_PATH = path.join(__dirname, "..", "..", "assets", "madame", "audio", "clavecin-3notes.mp3");
 
-// Durées des 3 segments. Total ≈ 9.5s. CLIP_DURATION_SEC DOIT matcher madame-library.js
+// Durées des 3 segments. Total ≈ 10.5s. CLIP_DURATION_SEC DOIT matcher madame-library.js
 // DURATION_SEC (sinon ffmpeg coupe le clip prématurément et on perd la fin de l'expression).
-// V2 : bumpé à 5s pour laisser le temps aux expressions théâtrales de se dérouler.
+// V2 : bumpé à 6s (Veo 3.1 n'accepte que 4/6/8) pour laisser le temps aux expressions théâtrales.
 const SETUP_DURATION_SEC = 2.5;
-const CLIP_DURATION_SEC = 5.0;
+const CLIP_DURATION_SEC = 6.0;
 const OUTRO_DURATION_SEC = 2.0;
 
 const VERDICT_KEYS = ["inacceptable", "evidemment", "mes-hommages", "passable"];

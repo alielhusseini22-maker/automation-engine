@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // Génère la LIBRAIRIE COMPLÈTE de clips Madame via Veo 3.1 (provider gagnant du bake-off).
 //
-// 16 clips (~$16.00 total, ~13 min de génération en série, 5s/clip @ $0.20/s) :
+// 16 clips (~$19.20 total, ~13 min de génération en série, 6s/clip @ $0.20/s) :
 //   - 4 verdicts × 2 variantes (pour rotation anti-répétition côté J3 generator)
 //   - 8 réactions neutres × 1 (cutaways / transitions / variations d'humeur)
 //
 // PROMPTS V2 (expressifs théâtraux) — feedback founder : "humaniser/accentuer plus,
 // les expressions n'étaient pas lisibles en V1". On a basculé de "minimal motion"
-// vers "expressive anthropomorphic motion, theatrical character animation" + bump 4s→5s
-// pour laisser le temps de jouer chaque beat dramatique.
+// vers "expressive anthropomorphic motion, theatrical character animation" + bump 4s→6s
+// pour laisser le temps de jouer chaque beat dramatique. NB : Veo 3.1 n'accepte que
+// {4, 6, 8} pour duration → 6 est le palier suivant après 4 (5 invalide).
 //
 // Convention de nommage (lue par core/social/madame.js phase 2 future) :
 //   assets/madame/clips/madame-<key>-<idx>.mp4
@@ -146,10 +147,17 @@ const CLIP_RECIPES = [
 ];
 
 const CLIPS_DIR = path.join(process.cwd(), "assets", "madame", "clips");
-const DURATION_SEC = 5;     // V2 : bump 4s→5s pour laisser le temps de jouer chaque beat dramatique (slow blink + nod = 2.5s, etc.)
+// Veo 3.1 n'accepte QUE ces durées (sinon 422 Unprocessable Entity). Validé empiriquement.
+const VEO_VALID_DURATIONS = [4, 6, 8];
+const DURATION_SEC = 6;     // V2 : bump 4s→6s pour laisser le temps de jouer chaque beat dramatique.
 const RESOLUTION = "720p";  // bake-off OK en 720p ; remonter en 1080p coûterait 50% de plus pour peu de gain
 const ASPECT_RATIO = "9:16";
-const COST_PER_CLIP_USD = 0.2 * DURATION_SEC; // Veo no-audio = $0.20/s → 5s = $1.00/clip
+const COST_PER_CLIP_USD = 0.2 * DURATION_SEC; // Veo no-audio = $0.20/s → 6s = $1.20/clip
+
+if (!VEO_VALID_DURATIONS.includes(DURATION_SEC)) {
+  // Garde-fou : échoue en 1ms au lieu de tourner 13 min à vide si quelqu'un met une durée invalide.
+  throw new Error(`DURATION_SEC=${DURATION_SEC} invalide — Veo 3.1 n'accepte que ${VEO_VALID_DURATIONS.join(", ")}`);
+}
 
 function expandRecipes() {
   // Aplatit les variantes en une liste linéaire d'items {key, idx, action, category}
