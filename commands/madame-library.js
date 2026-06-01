@@ -42,13 +42,21 @@ const PROMPT_SUFFIX = ". Soft cinematic golden light from the left, warm beige b
 // Abbey + énergie d'une comédie virale TikTok. Les "Channeling [...]" guident Veo sur l'intention.
 const CLIP_RECIPES = [
   // ── VERDICTS (8 clips : 4 × 2 variantes) ──
+  // V2.1 — prompts révisés sur feedback founder : test 2 expressions UNIVERSELLES
+  // (= lecture instantanée garantie, repostable telles quelles).
+  //   variant 1 = "tu es sérieux ??" → disbelief stupéfait, lecture immédiate
+  //   variant 2 = "je suis surpris et étonné" → wide-eyed wonder, lecture immédiate
+  // Le SAMPLE génère 4 vidéos (2 verdicts × 2 expressions) → on voit si Veo tient ces
+  // 2 expressions avec consistance, puis on dérive le reste de la lib si validé.
   {
     key: "inacceptable",
     category: "verdict",
     count: 2,
     variants: [
-      "stares directly into the camera with wide outraged eyes and mouth slightly open in visible shock, then slowly and deliberately closes her eyes in long-suffering exasperation, ears flattening back in clear disgust. Theatrical anthropomorphic expression. Channeling a grand dame who has just witnessed unspeakable bad taste",
-      "slowly turns her head away from the camera with a dramatic offended huff, eyes closing in indignant dismissal, then briefly opens one eye to glare back with theatrical disdain. Channeling outraged aristocratic refusal to acknowledge",
+      // Expression "tu es sérieux ??" (skeptical disbelief, "you can't be serious")
+      "stares directly into the camera with a stunned ARE YOU SERIOUS RIGHT NOW expression — eyes pulling wide open in shocked disbelief, head jerking back slightly, mouth dropping open in visible 'you cannot be serious' stupefaction, ears flattening to the side. Holds the look in long-suffering disbelief for a full beat. Theatrical anthropomorphic expression. Channeling someone who has just heard the most absurd thing imaginable",
+      // Expression "je suis surpris et étonné" (wide-eyed astonished wonder)
+      "looks at the camera with a sudden wide-eyed WAIT WHAT expression of genuine astonishment — eyes widening dramatically, mouth slightly opening in stunned surprise, head tilting forward in renewed alert attention, ears perking forward fully. Holds the surprised look for a full beat. Theatrical anthropomorphic expression. Channeling someone receiving an utterly unexpected revelation",
     ],
   },
   {
@@ -56,8 +64,10 @@ const CLIP_RECIPES = [
     category: "verdict",
     count: 2,
     variants: [
-      "tilts her chin upward with smug satisfaction, gives a slow theatrical blink while looking down her nose at the camera, then ends with a tiny self-satisfied huff. Channeling a queen who has been proven right yet again",
-      "gives the camera a long knowing stare, then slowly closes her eyes with absolute certainty and the smallest possible nod of confirmation, as if to say obviously. Channeling unshakeable confident superiority",
+      // Même expression "tu es sérieux ??" appliquée au slot evidemment (consistency check)
+      "stares directly into the camera with a stunned ARE YOU SERIOUS RIGHT NOW expression — eyes pulling wide open in shocked disbelief, head jerking back slightly, mouth dropping open in visible 'you cannot be serious' stupefaction, ears flattening to the side. Holds the look in long-suffering disbelief for a full beat. Theatrical anthropomorphic expression. Channeling someone who has just heard the most absurd thing imaginable",
+      // Même expression "surpris et étonné" appliquée au slot evidemment (consistency check)
+      "looks at the camera with a sudden wide-eyed WAIT WHAT expression of genuine astonishment — eyes widening dramatically, mouth slightly opening in stunned surprise, head tilting forward in renewed alert attention, ears perking forward fully. Holds the surprised look for a full beat. Theatrical anthropomorphic expression. Channeling someone receiving an utterly unexpected revelation",
     ],
   },
   {
