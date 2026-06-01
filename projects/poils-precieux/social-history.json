@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-16266726",
+    "v-36250167",
+    "v-11562575",
     "v-34689563",
     "v-36215085",
     "v-29759796",
@@ -20,6 +23,7 @@
     "v-34508555"
   ],
   "products": [
+    "niche-cocon-hidey",
     "peignoir-sechant-robie",
     "tag-gps-trackr",
     "lit-rond-cocoony",
@@ -33,21 +37,20 @@
     "sac-dos-pliable-carrio",
     "batonnets-matatabi-toothy",
     "fontaine-eau-led-aqualy",
-    "gant-toilettage-pawsky",
-    "harnais-reflechissant-walky"
+    "gant-toilettage-pawsky"
   ],
   "music": [
+    "calm-piano-1.mp3",
     "intimate-lofi-1.mp3",
     "warm-acoustic-2.mp3",
     "warm-folk-2.mp3",
     "warm-folk-1.mp3",
-    "warm-acoustic-1.mp3",
-    "calm-piano-1.mp3"
+    "warm-acoustic-1.mp3"
   ],
   "concepts": [
+    "emotion",
     "relatable",
     "product-highlight",
-    "astuce",
-    "emotion"
+    "astuce"
   ]
 }
