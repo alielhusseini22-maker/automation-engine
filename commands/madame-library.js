@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 // Génère la LIBRAIRIE COMPLÈTE de clips Madame via Veo 3.1 (provider gagnant du bake-off).
 //
-// 16 clips (~$12.80 total, ~10 min de génération en série) :
+// 16 clips (~$16.00 total, ~13 min de génération en série, 5s/clip @ $0.20/s) :
 //   - 4 verdicts × 2 variantes (pour rotation anti-répétition côté J3 generator)
 //   - 8 réactions neutres × 1 (cutaways / transitions / variations d'humeur)
+//
+// PROMPTS V2 (expressifs théâtraux) — feedback founder : "humaniser/accentuer plus,
+// les expressions n'étaient pas lisibles en V1". On a basculé de "minimal motion"
+// vers "expressive anthropomorphic motion, theatrical character animation" + bump 4s→5s
+// pour laisser le temps de jouer chaque beat dramatique.
 //
 // Convention de nommage (lue par core/social/madame.js phase 2 future) :
 //   assets/madame/clips/madame-<key>-<idx>.mp4
@@ -26,10 +31,14 @@ import { hasReplicateToken, generateMadameClipVeo } from "../core/video/madame-c
 
 // Préfixe commun à TOUS les prompts pour verrouiller le personnage + le style brand.
 // Le [action] varie par recette. Le préfixe garantit cohérence visuelle inter-clips.
+// V2 : suffixe basculé en mode EXPRESSIF (anciennement "minimal motion" qui bridait Veo).
 const PROMPT_PREFIX = "The same Persian cat from the reference image, Madame, ";
-const PROMPT_SUFFIX = ". Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium magazine quality, photoreal, minimal motion, no text, no humans, no other animals.";
+const PROMPT_SUFFIX = ". Soft cinematic golden light from the left, warm beige background, shallow depth of field, premium photoreal magazine quality, expressive anthropomorphic motion, theatrical character animation, clearly readable emotion, no text, no humans visible, no other animals.";
 
-// Recettes de la librairie. count = nombre de variantes du même key (pour rotation côté J3).
+// Recettes de la librairie V2. count = nombre de variantes du même key (pour rotation côté J3).
+// Chaque action est calibrée pour LISIBILITÉ INSTANTANÉE de l'émotion (test : un viewer doit
+// "lire" le verdict de Madame en 0.5 seconde). Référence mentale : Maggie Smith dans Downton
+// Abbey + énergie d'une comédie virale TikTok. Les "Channeling [...]" guident Veo sur l'intention.
 const CLIP_RECIPES = [
   // ── VERDICTS (8 clips : 4 × 2 variantes) ──
   {
@@ -37,8 +46,8 @@ const CLIP_RECIPES = [
     category: "verdict",
     count: 2,
     variants: [
-      "stares directly into the camera with a long unblinking disapproving gaze, then slowly closes her eyes in clear disgust, ears tilting slightly back",
-      "turns her head sharply away from the camera with visible disdain, refusing to acknowledge, ears flattening for a brief moment",
+      "stares directly into the camera with wide outraged eyes and mouth slightly open in visible shock, then slowly and deliberately closes her eyes in long-suffering exasperation, ears flattening back in clear disgust. Theatrical anthropomorphic expression. Channeling a grand dame who has just witnessed unspeakable bad taste",
+      "slowly turns her head away from the camera with a dramatic offended huff, eyes closing in indignant dismissal, then briefly opens one eye to glare back with theatrical disdain. Channeling outraged aristocratic refusal to acknowledge",
     ],
   },
   {
@@ -46,8 +55,8 @@ const CLIP_RECIPES = [
     category: "verdict",
     count: 2,
     variants: [
-      "performs a single confident slow blink, chin held high, with a knowing satisfied expression as if the answer was always obvious",
-      "lifts her chin slightly, gives a brief steady look at the camera, then closes her eyes for a beat in absolute certainty",
+      "tilts her chin upward with smug satisfaction, gives a slow theatrical blink while looking down her nose at the camera, then ends with a tiny self-satisfied huff. Channeling a queen who has been proven right yet again",
+      "gives the camera a long knowing stare, then slowly closes her eyes with absolute certainty and the smallest possible nod of confirmation, as if to say obviously. Channeling unshakeable confident superiority",
     ],
   },
   {
@@ -55,8 +64,8 @@ const CLIP_RECIPES = [
     category: "verdict",
     count: 2,
     variants: [
-      "gives a soft warm gaze toward the camera, eyes slowly half-closing in genuine approval, head gently lowering one inch in a small respectful acknowledgement",
-      "tilts her head graciously to the side, eyes warm and half-closed, in a regal nod of approval",
+      "looks at the camera with warm wide eyes of genuine admiration, gives a slow visible nod of deep respect, then closes her eyes savoring excellence. Like a discerning critic finally finding something worth her attention",
+      "softens her expression dramatically, eyes warming and half-closing in genuine approval, then bows her head slowly in a small reverent gesture of respect. Channeling a grand connoisseur recognizing rare quality",
     ],
   },
   {
@@ -64,8 +73,8 @@ const CLIP_RECIPES = [
     category: "verdict",
     count: 2,
     variants: [
-      "gives a sideways sceptical glance to the camera, one ear slightly back, neutral but visibly unimpressed",
-      "slowly looks the camera up and down with a mildly assessing expression, ending on a tiny sniff",
+      "slowly turns her head to deliver a long withering side-eye to the camera, mouth pursing slightly, one ear flicking back in dismissal. Theatrical sassy expression. Channeling an unimpressed grand dame mid-tea",
+      "looks the camera up and down slowly with a skeptical assessing gaze, mouth twitching as if suppressing a sigh, then a tiny shrug-like shoulder movement of indifference. Channeling polite but visibly unimpressed evaluation",
     ],
   },
 
@@ -75,7 +84,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "performs a single very slow deliberate blink, eyes closing fully for one full second then reopening, otherwise still",
+      "performs a single very slow deliberate blink with dramatic timing, eyes closing fully for a full beat then reopening with renewed intensity. Expressive theatrical pause",
     ],
   },
   {
@@ -83,7 +92,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "twitches one ear sharply as if dismissing an annoyance, the rest of the body remaining still",
+      "flicks one ear sharply in clear annoyance the way someone might roll their eyes, head tilting slightly in dismissal. Expressive anthropomorphic gesture of dismissal",
     ],
   },
   {
@@ -91,7 +100,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "shifts her gaze sharply to the side without moving her head, a quick sceptical sideways glance to the camera",
+      "snaps her gaze sharply to the side without moving her head, holds a long withering side-eye toward the camera, mouth pursing slightly. Theatrical sassy unimpressed expression",
     ],
   },
   {
@@ -99,7 +108,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "tilts her head slightly to the left in mild distinguished curiosity, eyes wide and attentive",
+      "tilts her head sharply and theatrically to the side with wide curious eyes, ears perking forward in clear what-is-this attention. Expressive anthropomorphic curiosity",
     ],
   },
   {
@@ -107,7 +116,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "opens her mouth in an elegant slow yawn revealing a hint of small teeth, then settles back into composure",
+      "opens her mouth wide in an elegant theatrical yawn revealing small white teeth, eyes closing in dramatic boredom, then settles back with composed indifference. Expressive bored aristocratic gesture",
     ],
   },
   {
@@ -115,7 +124,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "lifts one front paw and grooms it with a single delicate lick, then sets it down with poise",
+      "lifts one front paw with deliberate elegance, gives it a single delicate but theatrical lick while keeping intense eye contact with the camera, then sets it down with poise. Expressive anthropomorphic grooming",
     ],
   },
   {
@@ -123,7 +132,7 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "slowly raises her chin to gaze upward with serene regality, eyes half-closed in contemplation",
+      "slowly raises her chin dramatically to gaze upward with serene regality, eyes half-closing in deep philosophical contemplation. Theatrical aristocratic pose",
     ],
   },
   {
@@ -131,16 +140,16 @@ const CLIP_RECIPES = [
     category: "reaction",
     count: 1,
     variants: [
-      "subtly wrinkles her nose as if she has just detected something faintly unpleasant in the air",
+      "dramatically wrinkles her nose in clear disgust as if detecting something deeply unpleasant in the air, head pulling back slightly with visible offense. Expressive anthropomorphic reaction",
     ],
   },
 ];
 
 const CLIPS_DIR = path.join(process.cwd(), "assets", "madame", "clips");
-const DURATION_SEC = 4;     // 4s = sweet spot pour réactions Madame (assez pour blink+turn, pas plus)
+const DURATION_SEC = 5;     // V2 : bump 4s→5s pour laisser le temps de jouer chaque beat dramatique (slow blink + nod = 2.5s, etc.)
 const RESOLUTION = "720p";  // bake-off OK en 720p ; remonter en 1080p coûterait 50% de plus pour peu de gain
 const ASPECT_RATIO = "9:16";
-const COST_PER_CLIP_USD = 0.2 * DURATION_SEC; // Veo no-audio = $0.20/s
+const COST_PER_CLIP_USD = 0.2 * DURATION_SEC; // Veo no-audio = $0.20/s → 5s = $1.00/clip
 
 function expandRecipes() {
   // Aplatit les variantes en une liste linéaire d'items {key, idx, action, category}
