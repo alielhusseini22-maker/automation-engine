@@ -137,15 +137,15 @@ export async function generateMadameVideo(config, runDir) {
 Madame = chatte Persan chic, "Directrice des Standards de Poils Précieux". Elle juge des trucs du monde animal (produits, comportements, tendances, gadgets, modes, prix excessifs). Ton aristocratique légèrement snob, JAMAIS méchant — c'est la légèreté qui rend ça drôle.
 
 Elle a 4 verdicts possibles :
-- inacceptable    → sévère, mépris distingué (gadgets ridicules, prix abusifs, pratiques moches)
+- inacceptable    → désapprobation froide (gadgets ridicules, prix abusifs, pratiques moches)
 - evidemment      → confiance hautaine, "l'évidence" (vérités universelles, bonnes pratiques de base)
-- mes-hommages    → approbation rare, respect (très belles choses, gestes nobles)
-- passable        → réserve, peu impressionnée (correct mais sans génie)
+- tu-es-serieux   → incrédulité sceptique (situations absurdes qui méritent un side-eye "vraiment ?")
+- surpris-etonne  → curiosité contrôlée (truc inattendu qui mérite l'attention de Madame)
 
 RÈGLES DURES :
 - FRANÇAIS naturel, ton parlé léger.
 - ZÉRO émoji NULLE PART.
-- SITUATION = phrase courte (4-7 mots max), factuelle, SANS verbe de jugement (Madame juge, pas la situation). Exemples : "La brosse cire à 39€.", "Le pull en cachemire pour chat.", "Les noms en -ette pour mâles.", "Les colliers cloutés roses."
+- SITUATION = phrase courte (4-7 mots max), factuelle, SANS verbe de jugement (Madame juge, pas la situation). Exemples : "La brosse cire à 39€.", "Le pull en cachemire pour chat.", "Les noms en -ette pour mâles.", "Les colliers cloutés roses.", "Brosser son chien tous les jours.", "Le chat qui dort dans le frigo."
 - Ne JAMAIS mentionner Poils Précieux dans la situation (elle juge des trucs externes/abstraits).
 - Ne JAMAIS nommer de marque concurrente (citer une catégorie/concept au lieu d'une marque).
 - Caption Reel 50-100 mots, ton snob léger, sans "Lien en bio", termine par UNE question ouverte qui pousse les commentaires.
@@ -157,12 +157,12 @@ Situations récentes (à éviter) : ${recentSituations.length ? recentSituations
 Pioche UNE nouvelle situation à juger (pas dans les récentes), décide le verdict qui colle vraiment, écris la caption.
 
 Catégories d'inspiration pour la situation (varie d'un post à l'autre) :
-  accessoires toilettage · comportements félins ou canins · modes/tendances pet · gadgets technologiques · alimentation premium ou kitsch · beauté animale · rituels du quotidien · prix excessifs sur le marché · accessoires ostentatoires · noms d'animaux.
+  accessoires toilettage · comportements félins ou canins · modes/tendances pet · gadgets technologiques · alimentation premium ou kitsch · beauté animale · rituels du quotidien · prix excessifs sur le marché · accessoires ostentatoires · noms d'animaux · pratiques bizarres sur les réseaux pet.
 
 Return JSON :
 {
   "situation": "4-7 mots factuel sans émoji",
-  "verdictKey": "inacceptable|evidemment|mes-hommages|passable",
+  "verdictKey": "inacceptable|evidemment|tu-es-serieux|surpris-etonne",
   "captionForPost": "50-100 mots, ton snob léger, sans émoji, sans 'Lien en bio', termine par UNE question ouverte",
   "captionHashtags": ["#poilsprecieux", "#poilsprecieuxfr", "...6-8 hashtags FR pet pertinents..."],
   "altText": "1 phrase FR décrivant la vidéo"
