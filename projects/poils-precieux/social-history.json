@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-6864989",
+    "v-35290091",
+    "v-6000764",
     "v-10914654",
     "v-6864984",
     "v-18126938",
@@ -26,6 +29,7 @@
     "v-34508555"
   ],
   "products": [
+    "tapis-fouille-snifo",
     "niche-cocon-hidey",
     "peignoir-sechant-robie",
     "tag-gps-trackr",
@@ -39,22 +43,21 @@
     "coussin-chauffant-cuddly",
     "sac-dos-pliable-carrio",
     "batonnets-matatabi-toothy",
-    "fontaine-eau-led-aqualy",
-    "gant-toilettage-pawsky"
+    "fontaine-eau-led-aqualy"
   ],
   "music": [
+    "warm-folk-2.mp3",
     "warm-acoustic-1.mp3",
     "intimate-lofi-2.mp3",
     "warm-folk-1.mp3",
     "calm-piano-1.mp3",
-    "intimate-lofi-1.mp3",
-    "warm-acoustic-2.mp3"
+    "intimate-lofi-1.mp3"
   ],
   "concepts": [
+    "relatable",
     "madame",
     "humor",
     "emotion",
-    "relatable",
     "product-highlight",
     "astuce"
   ]
