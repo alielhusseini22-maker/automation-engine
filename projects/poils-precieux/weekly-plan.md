@@ -1,6 +1,6 @@
-# Plan stratégique — semaine 22
+# Plan stratégique — semaine 23
 
-Généré le 2026-05-31
+Généré le 2026-06-07
 
 ## Thème de la semaine
 
