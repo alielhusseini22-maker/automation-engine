@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-26543251",
+    "v-35433817",
+    "v-7189593",
     "v-31254869",
     "v-5229584",
     "v-5994137",
@@ -34,6 +37,7 @@
     "v-34508555"
   ],
   "products": [
+    "tapis-silicone-drypy",
     "lit-moelleux-chien-restio",
     "tapis-fouille-snifo",
     "niche-cocon-hidey",
@@ -47,22 +51,21 @@
     "ciseaux-toilettage-snippy",
     "gourde-voyage-sippy",
     "coussin-chauffant-cuddly",
-    "sac-dos-pliable-carrio",
-    "batonnets-matatabi-toothy"
+    "sac-dos-pliable-carrio"
   ],
   "music": [
+    "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
     "calm-piano-2.mp3",
     "calm-piano-1.mp3",
     "warm-folk-2.mp3",
-    "warm-acoustic-1.mp3",
-    "intimate-lofi-2.mp3"
+    "warm-acoustic-1.mp3"
   ],
   "concepts": [
+    "relatable",
     "madame",
     "humor",
     "emotion",
-    "relatable",
     "product-highlight",
     "astuce"
   ]
