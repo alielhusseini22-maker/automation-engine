@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-6853907",
+    "v-35822884",
+    "v-8499649",
     "v-19957036",
     "v-20102192",
     "v-28243854",
@@ -42,6 +45,7 @@
     "v-34508555"
   ],
   "products": [
+    "aspirateur-vacu",
     "coussin-chauffant-cuddly",
     "tapis-silicone-drypy",
     "lit-moelleux-chien-restio",
@@ -52,25 +56,24 @@
     "lit-rond-cocoony",
     "detartreur-brilly",
     "gamelles-surelevees-bambowl",
-    "aspirateur-vacu",
     "brosse-dents-doigtier-fingo",
     "ciseaux-toilettage-snippy",
     "gourde-voyage-sippy",
     "sac-dos-pliable-carrio"
   ],
   "music": [
+    "intimate-lofi-2.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-1.mp3",
     "warm-folk-1.mp3",
-    "warm-acoustic-2.mp3",
-    "calm-piano-2.mp3"
+    "warm-acoustic-2.mp3"
   ],
   "concepts": [
+    "relatable",
     "madame",
     "humor",
     "emotion",
-    "relatable",
     "product-highlight",
     "astuce"
   ]
