@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-12162694",
+    "v-6132710",
+    "v-6865211",
     "v-20692404",
     "v-6853907",
     "v-35822884",
@@ -46,6 +49,7 @@
     "v-34508555"
   ],
   "products": [
+    "coupe-griffes-clikko",
     "aspirateur-vacu",
     "coussin-chauffant-cuddly",
     "tapis-silicone-drypy",
@@ -59,23 +63,22 @@
     "gamelles-surelevees-bambowl",
     "brosse-dents-doigtier-fingo",
     "ciseaux-toilettage-snippy",
-    "gourde-voyage-sippy",
-    "sac-dos-pliable-carrio"
+    "gourde-voyage-sippy"
   ],
   "music": [
+    "warm-acoustic-2.mp3",
     "intimate-lofi-1.mp3",
     "intimate-lofi-2.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
-    "warm-acoustic-1.mp3",
-    "warm-folk-1.mp3"
+    "warm-acoustic-1.mp3"
   ],
   "concepts": [
+    "astuce",
     "madame",
     "humor",
     "relatable",
     "emotion",
-    "product-highlight",
-    "astuce"
+    "product-highlight"
   ]
 }
