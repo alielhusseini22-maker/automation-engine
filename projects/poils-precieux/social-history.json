@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-29959063",
+    "v-34929151",
+    "v-15447829",
     "v-36533338",
     "v-12162694",
     "v-6132710",
@@ -50,6 +53,7 @@
     "v-34508555"
   ],
   "products": [
+    "plaid-deperlant-snuggly",
     "coupe-griffes-clikko",
     "aspirateur-vacu",
     "coussin-chauffant-cuddly",
@@ -63,23 +67,22 @@
     "detartreur-brilly",
     "gamelles-surelevees-bambowl",
     "brosse-dents-doigtier-fingo",
-    "ciseaux-toilettage-snippy",
-    "gourde-voyage-sippy"
+    "ciseaux-toilettage-snippy"
   ],
   "music": [
+    "calm-piano-1.mp3",
     "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
     "intimate-lofi-1.mp3",
     "intimate-lofi-2.mp3",
-    "warm-folk-2.mp3",
-    "calm-piano-1.mp3"
+    "warm-folk-2.mp3"
   ],
   "concepts": [
+    "emotion",
     "madame",
     "humor",
     "astuce",
     "relatable",
-    "emotion",
     "product-highlight"
   ]
 }
