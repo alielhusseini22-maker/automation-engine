@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-36435258",
+    "v-35605533",
+    "v-10914653",
     "v-15386749",
     "v-29959063",
     "v-34929151",
@@ -54,6 +57,7 @@
     "v-34508555"
   ],
   "products": [
+    "distributeur-canard-quacky",
     "plaid-deperlant-snuggly",
     "coupe-griffes-clikko",
     "aspirateur-vacu",
@@ -67,23 +71,22 @@
     "lit-rond-cocoony",
     "detartreur-brilly",
     "gamelles-surelevees-bambowl",
-    "brosse-dents-doigtier-fingo",
-    "ciseaux-toilettage-snippy"
+    "brosse-dents-doigtier-fingo"
   ],
   "music": [
+    "calm-piano-2.mp3",
     "warm-acoustic-1.mp3",
     "calm-piano-1.mp3",
     "warm-folk-1.mp3",
     "warm-acoustic-2.mp3",
-    "intimate-lofi-1.mp3",
-    "intimate-lofi-2.mp3"
+    "intimate-lofi-1.mp3"
   ],
   "concepts": [
+    "relatable",
     "madame",
     "humor",
     "emotion",
     "astuce",
-    "relatable",
     "product-highlight"
   ]
 }
