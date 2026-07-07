@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-29376375",
+    "v-34929178",
+    "v-35510144",
     "v-7199255",
     "v-36435258",
     "v-35605533",
@@ -58,6 +61,7 @@
     "v-34508555"
   ],
   "products": [
+    "lit-rond-cocoony",
     "distributeur-canard-quacky",
     "plaid-deperlant-snuggly",
     "coupe-griffes-clikko",
@@ -69,24 +73,23 @@
     "niche-cocon-hidey",
     "peignoir-sechant-robie",
     "tag-gps-trackr",
-    "lit-rond-cocoony",
     "detartreur-brilly",
     "gamelles-surelevees-bambowl",
     "brosse-dents-doigtier-fingo"
   ],
   "music": [
+    "calm-piano-1.mp3",
     "warm-acoustic-2.mp3",
     "calm-piano-2.mp3",
     "warm-acoustic-1.mp3",
-    "calm-piano-1.mp3",
     "warm-folk-1.mp3",
     "intimate-lofi-1.mp3"
   ],
   "concepts": [
+    "emotion",
     "madame",
     "humor",
     "relatable",
-    "emotion",
     "astuce",
     "product-highlight"
   ]
