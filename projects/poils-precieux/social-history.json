@@ -1,5 +1,6 @@
 {
   "videos": [
+    "v-32726921",
     "v-29376375",
     "v-34929178",
     "v-35510144",
@@ -78,17 +79,17 @@
     "brosse-dents-doigtier-fingo"
   ],
   "music": [
+    "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-2.mp3",
     "calm-piano-2.mp3",
     "warm-acoustic-1.mp3",
-    "warm-folk-1.mp3",
-    "intimate-lofi-1.mp3"
+    "warm-folk-1.mp3"
   ],
   "concepts": [
+    "humor",
     "emotion",
     "madame",
-    "humor",
     "relatable",
     "astuce",
     "product-highlight"
