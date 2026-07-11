@@ -1,5 +1,8 @@
 {
   "videos": [
+    "v-6131487",
+    "v-9986242",
+    "v-6131722",
     "v-32726921",
     "v-29376375",
     "v-34929178",
@@ -62,6 +65,7 @@
     "v-34508555"
   ],
   "products": [
+    "brosse-vapeur-steamy",
     "lit-rond-cocoony",
     "distributeur-canard-quacky",
     "plaid-deperlant-snuggly",
@@ -75,23 +79,22 @@
     "peignoir-sechant-robie",
     "tag-gps-trackr",
     "detartreur-brilly",
-    "gamelles-surelevees-bambowl",
-    "brosse-dents-doigtier-fingo"
+    "gamelles-surelevees-bambowl"
   ],
   "music": [
+    "warm-folk-1.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-2.mp3",
     "calm-piano-2.mp3",
-    "warm-acoustic-1.mp3",
-    "warm-folk-1.mp3"
+    "warm-acoustic-1.mp3"
   ],
   "concepts": [
+    "astuce",
     "madame",
     "humor",
     "emotion",
     "relatable",
-    "astuce",
     "product-highlight"
   ]
 }
