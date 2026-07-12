@@ -1,5 +1,6 @@
 {
   "videos": [
+    "v-6869665",
     "v-6131487",
     "v-9986242",
     "v-6131722",
@@ -82,17 +83,17 @@
     "gamelles-surelevees-bambowl"
   ],
   "music": [
+    "warm-acoustic-1.mp3",
     "warm-folk-1.mp3",
     "warm-folk-2.mp3",
     "calm-piano-1.mp3",
     "warm-acoustic-2.mp3",
-    "calm-piano-2.mp3",
-    "warm-acoustic-1.mp3"
+    "calm-piano-2.mp3"
   ],
   "concepts": [
+    "humor",
     "astuce",
     "madame",
-    "humor",
     "emotion",
     "relatable",
     "product-highlight"
