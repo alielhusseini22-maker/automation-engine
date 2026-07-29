@@ -4,8 +4,7 @@
 // Cycle 4 jours (modulo CYCLE_START_ISO), 2 posts par cycle :
 //   - J1 (jour 0) → montage émotion/produit (générateur "montage")
 //   - J2 (jour 1) → humour 1 clip réel + texte viral ≤7 mots ("humor")
-//   - J3 (jour 2) → PAUSE (décommissionné 2026-06-01 — Madame ne passait pas la barre qualité,
-//                   code + assets Madame conservés en dormant pour éventuelle reprise ultérieure)
+//   - J3 (jour 2) → PAUSE
 //   - jour 3      → PAUSE (aucun post)
 //
 // Si --day-type fourni explicitement (j1|j2|j3|pause), on l'utilise. Sinon on calcule
@@ -45,9 +44,7 @@ function dayTypeForDate(date = new Date()) {
   return CYCLE[pos];
 }
 
-// Mapping type de jour → template à exécuter.
-// j3 est intentionnellement absent : Madame décommissionnée 2026-06-01. Pour la réactiver,
-// rajouter `j3: "madame"` ici (le générateur core/social/madame.js + assets sont toujours en place).
+// Mapping type de jour → template à exécuter. j3 et pause n'ont pas de template = jours sans post.
 const TEMPLATE_FOR_DAY = { j1: "montage", j2: "humor" };
 
 async function uploadAllSlides(config, mediaPaths) {

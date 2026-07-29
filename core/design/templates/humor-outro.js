@@ -1,4 +1,4 @@
-// Template "Humor Outro" — sting de fin pour J2 (humour) et plus tard J3 (Madame).
+// Template "Humor Outro" — sting de fin pour J2 (humour).
 // Carte plein cadre 1080×1920 beige Poils Précieux + wordmark Fraunces + domaine.
 // Sert de signature visuelle ULTRA-RECONNAISSABLE en fin de Reel (~2.5s),
 // pour qu'au bout de quelques posts les gens reconnaissent le sting AVANT même de lire.

@@ -15,7 +15,6 @@ import { loadWeeklyPlan } from "../strategy/weekly-plan.js";
 import { recentVideoIds, recentProducts, recentMusic } from "./history.js";
 import { generateMontageVideo } from "./montage.js";
 import { generateHumorVideo } from "./humor.js";
-import { generateMadameVideo } from "./madame.js";
 
 /**
  * Génère un "designed post" complet pour le slot temporel donné.
@@ -62,22 +61,6 @@ export async function generateDesignedPost(config, runDir, { templateType, slot,
     } catch (err) {
       console.log(`[design] ⚠ humor failed (${err.message}) → fallback pexels-video`);
       return await generatePexelsVideo(config, runDir);
-    }
-  }
-  if (templateType === "madame") {
-    // J3 — Format signature mascotte. Tant que la librairie Madame (clips IA + motif 3 notes)
-    // n'est pas générée, on retombe proprement sur "humor" pour ne pas sauter un jour de cycle.
-    // Si humor échoue à son tour → fallback pexels-video via le bloc humor ci-dessus.
-    try {
-      return await generateMadameVideo(config, runDir);
-    } catch (err) {
-      console.log(`[design] ⚠ madame non prêt (${err.message}) → fallback humor`);
-      try {
-        return await generateHumorVideo(config, runDir);
-      } catch (err2) {
-        console.log(`[design] ⚠ humor a échoué aussi (${err2.message}) → fallback pexels-video`);
-        return await generatePexelsVideo(config, runDir);
-      }
     }
   }
   throw new Error(`Unknown template type: ${templateType}`);
