@@ -1,9 +1,10 @@
-name: Social — 1 video/day (cycle J1/J2/J3/PAUSE)
+name: Social — 1 video/day (cycle J1/J2/PAUSE/PAUSE)
 
 on:
   schedule:
-    # 14h Paris CEST (12h UTC summer) — 1 seul post/jour. Cycle J1→J2→J3→PAUSE
+    # 14h Paris CEST (12h UTC summer) — 1 seul post/jour. Cycle J1→J2→PAUSE→PAUSE
     # géré par commands/social.js (modulo 4 jours depuis CYCLE_START_ISO).
+    # J3 (madame) décommissionné 2026-06-01 — se comporte comme un jour PAUSE.
     - cron: "17 12 * * *"
   workflow_dispatch:
     inputs:

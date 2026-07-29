@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // Génère + schedule un post social — version "designed posts" (no more bad videos).
 //
-// 1 vidéo/jour, cycle 4 jours (modulo CYCLE_START_ISO) :
+// Cycle 4 jours (modulo CYCLE_START_ISO), 2 posts par cycle :
 //   - J1 (jour 0) → montage émotion/produit (générateur "montage")
 //   - J2 (jour 1) → humour 1 clip réel + texte viral ≤7 mots ("humor")
-//   - J3 (jour 2) → "L'avis de Madame", format signature mascotte ("madame")
+//   - J3 (jour 2) → PAUSE (décommissionné 2026-06-01 — Madame ne passait pas la barre qualité,
+//                   code + assets Madame conservés en dormant pour éventuelle reprise ultérieure)
 //   - jour 3      → PAUSE (aucun post)
 //
 // Si --day-type fourni explicitement (j1|j2|j3|pause), on l'utilise. Sinon on calcule
-// la position dans le cycle 4 jours depuis CYCLE_START_ISO.
+// la position dans le cycle 4 jours depuis CYCLE_START_ISO. Si dayType est un jour sans
+// template mappé (j3, pause), la fonction sort proprement sans post.
 //
 // Usage :
 //   node commands/social.js --project poils-precieux                    (auto cycle)
@@ -44,7 +46,9 @@ function dayTypeForDate(date = new Date()) {
 }
 
 // Mapping type de jour → template à exécuter.
-const TEMPLATE_FOR_DAY = { j1: "montage", j2: "humor", j3: "madame" };
+// j3 est intentionnellement absent : Madame décommissionnée 2026-06-01. Pour la réactiver,
+// rajouter `j3: "madame"` ici (le générateur core/social/madame.js + assets sont toujours en place).
+const TEMPLATE_FOR_DAY = { j1: "montage", j2: "humor" };
 
 async function uploadAllSlides(config, mediaPaths) {
   const urls = [];
@@ -67,12 +71,16 @@ async function main() {
   console.log(`[social] project=${config.project.id} cycle=${dayType} (${dayName})`);
 
   if (dayType === "pause") {
-    console.log(`[social] PAUSE day — aucun post aujourd'hui (cycle 3+1). Sortie.`);
+    console.log(`[social] PAUSE day — aucun post aujourd'hui. Sortie.`);
     return;
   }
 
   const templateType = TEMPLATE_FOR_DAY[dayType];
-  if (!templateType) throw new Error(`Type de jour inconnu : ${dayType} (attendu j1|j2|j3|pause)`);
+  if (!templateType) {
+    // dayType valide mais pas de template mappé (ex: j3 décommissionné). Sortie propre.
+    console.log(`[social] ${dayType.toUpperCase()} sans template mappé (décommissionné) — aucun post. Sortie.`);
+    return;
+  }
 
   // Step 1 — générer le designed post (template + content + rendu)
   console.log(`[social] Step 1/3 — generating ${templateType}`);
